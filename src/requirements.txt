@@ -1,0 +1,5 @@
+uwsgi
+fastapi
+uvicorn
+python-multipart
+pytest

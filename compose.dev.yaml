@@ -1,0 +1,6 @@
+services:
+  fastapi:
+    volumes:
+      - ./src:/app
+    command: src dev main.py --host 0.0.0.0
+
