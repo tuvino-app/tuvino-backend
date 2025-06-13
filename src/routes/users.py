@@ -16,7 +16,7 @@ wines = [
 ]
 
 @router.get(
-    '/{id}/recommendations',
+    '/{user_id}/recommendations',
     summary='Get recommendations for a user',
     name='users:get-recommendations',
     response_model=None,
