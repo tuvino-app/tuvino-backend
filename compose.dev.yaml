@@ -1,6 +1,11 @@
 services:
-  fastapi:
+  tuvino:
+    container_name: tuvino-api
+    ports:
+      - '8000:8000'
+    build:
+      context: src
+      dockerfile: Dockerfile
     volumes:
       - ./src:/app
-    command: src dev main.py --host 0.0.0.0
 

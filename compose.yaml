@@ -5,9 +5,7 @@ services:
       context: src
       dockerfile: Dockerfile
     ports:
-      - mode: ingress
-        target: 8000
-        published: 8000
+      - '8000:8000'
     #deploy:
     #  resources:
     #    reservations:
