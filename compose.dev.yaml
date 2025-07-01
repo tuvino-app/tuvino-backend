@@ -8,4 +8,4 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./src:/app
-
+      - ./.env:/app/.env

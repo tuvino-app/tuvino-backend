@@ -6,7 +6,10 @@ services:
       dockerfile: Dockerfile
     ports:
       - '8000:8000'
-    #deploy:
-    #  resources:
-    #    reservations:
-    #      memory: 256M
+    environment:
+      - SUPABASE_URL
+      - SUPABASE_KEY
+    deploy:
+      resources:
+        reservations:
+          memory: 256M

@@ -38,5 +38,4 @@ async def get_recommendations(user_id: int):
 )
 async def get_user_info(user_id: int):
     users_repo = UsersRepository()
-    # response = users_repo.get_user_by_id(user_id)
-    return users_repo.get_all_users()
+    return users_repo.get_user_by_id(user_id)
