@@ -6,9 +6,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - '8000:8000'
-    environment:
-      - SUPABASE_URL
-      - SUPABASE_KEY
+    env_file:
+      - .env
     deploy:
       resources:
         reservations:

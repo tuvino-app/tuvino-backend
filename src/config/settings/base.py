@@ -48,7 +48,7 @@ class BackendBaseSettings(pydantic_settings.BaseSettings):
             f"{self.DB_POSTGRES_NAME}"
         )
 
-    class Config(pydantic.BaseConfig):
+    class Config(pydantic.ConfigDict):
         case_sensitive: bool = True
         env_file: str = f"{str(ROOT_DIR)}/.env"
         validate_assignment: bool = True
