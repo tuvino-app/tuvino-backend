@@ -14,14 +14,14 @@ RUN apt-get update -qq \
       && rm -rf /var/lib/apt/lists/*
 
 # Install any needed packages specified in requirements.txt
-COPY requirements.txt /app/
+COPY src/requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the current directory contents into the container at /app
-COPY . /app
+COPY src ./src
 
 # Make port 5000 available to the world outside this container
 EXPOSE 8000
 
 # Run main when the container launches
-CMD ["uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "src.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]

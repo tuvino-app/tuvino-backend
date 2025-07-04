@@ -2,8 +2,8 @@ import datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from utilities.formatters.datetime_formatter import format_datetime_into_isoformat
-from utilities.formatters.field_formatter import format_dict_key_to_camel_case
+from src.utilities.formatters.datetime_formatter import format_datetime_into_isoformat
+from src.utilities.formatters.field_formatter import format_dict_key_to_camel_case
 
 class BaseSchemaModel(BaseModel):
     model_config = ConfigDict(

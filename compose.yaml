@@ -2,7 +2,7 @@ services:
   tuvino:
     restart: always
     build:
-      context: src
+      context: .
       dockerfile: Dockerfile
     ports:
       - '8000:8000'
