@@ -1,8 +1,10 @@
 import fastapi
 import random
 
-from fastapi import status
+from fastapi import status, Depends, Path
 from repository.users_repository import UsersRepository
+
+from models.schemas.user import *
 
 router = fastapi.APIRouter(prefix="/users", tags=["users"])
 
@@ -23,7 +25,9 @@ wines = [
     response_model=None,
     status_code=status.HTTP_200_OK,
 )
-async def get_recommendations(user_id: int):
+async def get_recommendations(
+    user_id: int = Path(..., title="The ID of the account to get the recommendations for")
+):
     return {
         'userId': user_id,
         'recommendations': random.sample(wines, 3)
@@ -31,11 +35,27 @@ async def get_recommendations(user_id: int):
 
 @router.get(
     '/{user_id}',
-    summary='Get recommendations for a user',
-    name='users:get-recommendations',
+    summary='Get information for a user',
+    name='users:get-info',
     response_model=None,
     status_code=status.HTTP_200_OK,
 )
-async def get_user_info(user_id: int):
-    users_repo = UsersRepository()
+async def get_user_info(
+    user_id: str = Path(..., title="The ID of the account to get the info"),
+    users_repo: UsersRepository = Depends(UsersRepository),
+):
+    return users_repo.get_user_by_id(user_id)
+
+@router.post(
+    '/{user_id}',
+    summary='Post user preferences',
+    name='users:post-preferences',
+    response_model=None,
+    status_code=status.HTTP_200_OK,
+)
+async def update_user_preferences(
+    user_preferences: UserPreferences,
+    user_id: str = Path(..., title="The ID of the account to update"),
+    users_repo: UsersRepository = Depends(UsersRepository),
+):
     return users_repo.get_user_by_id(user_id)

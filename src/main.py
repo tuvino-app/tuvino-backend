@@ -1,20 +1,18 @@
 import fastapi
 import logging
 import uvicorn
+
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
-
-from api.routes.users import router as users_router
 
 from api.endpoints import router as api_endpoint_router
+from api.endpoints import default_router
 from config.manager import settings
 
 load_dotenv()
-
-app = FastAPI()
-router = fastapi.APIRouter()
 
 def initialize_log(logging_level):
     """
@@ -32,6 +30,13 @@ def initialize_log(logging_level):
 def initialize_app() -> fastapi.FastAPI:
     fastapi_app = fastapi.FastAPI(**settings.set_backend_app_attributes)
 
+    @fastapi_app.exception_handler(HTTPException)
+    async def http_exception_handler(request, exc):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"error": exc.detail},
+        )
+
     fastapi_app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.ALLOWED_ORIGINS,
@@ -40,25 +45,17 @@ def initialize_app() -> fastapi.FastAPI:
         allow_headers=settings.ALLOWED_HEADERS,
     )
 
+    fastapi_app.include_router(router=default_router, prefix='')
     fastapi_app.include_router(router=api_endpoint_router, prefix=settings.API_PREFIX)
 
     return fastapi_app
 
-@router.get('/')
-async def get_app_info(_request: Request):
-    return {
-        'appName': 'tuVino',
-        'version': '0.0.1',
-    }
-
 initialize_log(logging.INFO)
-router.include_router(router=users_router)
-tuvino_backend: fastapi.FastAPI = initialize_app()
-app.include_router(router=router)
+app: FastAPI = initialize_app()
 
 if __name__ == "__main__":
     uvicorn.run(
-        app="main:backend_app",
+        app="main:app",
         host=settings.SERVER_HOST,
         port=settings.SERVER_PORT,
         reload=settings.DEBUG,
