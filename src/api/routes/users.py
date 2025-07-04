@@ -2,9 +2,9 @@ import fastapi
 import random
 
 from fastapi import status, Depends, Path
-from repository.users_repository import UsersRepository
+from src.repository.users_repository import UsersRepository
 
-from models.schemas.user import *
+from src.models.schemas.user import UserPreferences
 
 router = fastapi.APIRouter(prefix="/users", tags=["users"])
 

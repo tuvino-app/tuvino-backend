@@ -1,7 +1,7 @@
 import fastapi
 
-from api.routes.users import router as users_router
-from api.routes.preferences import router as preferences_router
+from src.api.routes.users import router as users_router
+from src.api.routes.preferences import router as preferences_router
 
 default_router = fastapi.APIRouter()
 router = fastapi.APIRouter()

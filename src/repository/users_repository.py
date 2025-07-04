@@ -2,9 +2,9 @@ import uuid
 from fastapi import HTTPException
 import logging
 
-from repository.supabase_repository import SupabaseRepository
+from src.repository.supabase_repository import SupabaseRepository
 
-from models.user import User
+from src.models.user import User
 
 class UsersRepository(SupabaseRepository):
     _table_name = "usuarios"

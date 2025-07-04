@@ -1,16 +1,16 @@
 import fastapi
 import logging
 import uvicorn
+from dotenv import load_dotenv
 
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from dotenv import load_dotenv
 
-from api.endpoints import router as api_endpoint_router
-from api.endpoints import default_router
-from config.manager import settings
+from src.api.endpoints import router as api_endpoint_router
+from src.api.endpoints import default_router
+from src.config.manager import settings
 
 load_dotenv()
 
