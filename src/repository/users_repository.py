@@ -2,11 +2,11 @@ import uuid
 from fastapi import HTTPException
 import logging
 
-from src.repository.supabase_repository import SupabaseRepository
+from src.repository.base import BaseRepository
 
 from src.models.user import User
 
-class UsersRepository(SupabaseRepository):
+class UsersRepository(BaseRepository):
     _table_name = "usuarios"
 
     def get_all_users(self):

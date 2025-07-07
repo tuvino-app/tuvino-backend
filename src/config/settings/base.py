@@ -16,9 +16,17 @@ class BackendBaseSettings(pydantic_settings.BaseSettings):
     DESCRIPTION: str | None = None
     DEBUG: bool = False
 
-    SERVER_HOST: str = decouple.config("BACKEND_SERVER_HOST", cast=str)  # type: ignore
-    SERVER_PORT: int = decouple.config("BACKEND_SERVER_PORT", cast=int)  # type: ignore
-    SERVER_WORKERS: int = decouple.config("BACKEND_SERVER_WORKERS", cast=int)  # type: ignore
+    SERVER_HOST: str = decouple.config("SERVER_HOST", cast=str)  # type: ignore
+    SERVER_PORT: int = decouple.config("SERVER_PORT", cast=int)  # type: ignore
+    SERVER_WORKERS: int = decouple.config("SERVER_WORKERS", cast=int)  # type: ignore
+
+    DB_POSTGRES_SCHEMA: str = decouple.config("POSTGRES_SCHEMA", cast=str)  # type: ignore
+    DB_POSTGRES_USERNAME: str = decouple.config("POSTGRES_USERNAME", cast=str)  # type: ignore
+    DB_POSTGRES_PASSWORD: str = decouple.config("POSTGRES_PASSWORD", cast=str)  # type: ignore
+    DB_POSTGRES_HOST: str = decouple.config("POSTGRES_HOST", cast=str)  # type: ignore
+    DB_POSTGRES_PORT: str = decouple.config("POSTGRES_PORT", cast=str)  # type: ignore
+    DB_POSTGRES_NAME: str = decouple.config("POSTGRES_DB", cast=str)  # type: ignore
+
     API_PREFIX: str = "/api"
     DOCS_URL: str = "/docs"
     OPENAPI_URL: str = "/openapi.json"

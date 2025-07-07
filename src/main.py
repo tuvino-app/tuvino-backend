@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 from src.api.endpoints import router as api_endpoint_router
 from src.api.endpoints import default_router
 from src.config.manager import settings
+from src.config.events import execute_backend_server_event_handler, terminate_backend_server_event_handler
 
 load_dotenv()
 
@@ -37,12 +38,28 @@ def initialize_app() -> fastapi.FastAPI:
             content={"error": exc.detail},
         )
 
+    @fastapi_app.exception_handler(Exception)
+    async def internal_server_error_handler(request, exc):
+        return JSONResponse(
+            status_code=500,
+            content={"error": exc.detail},
+        )
+
     fastapi_app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.ALLOWED_ORIGINS,
         allow_credentials=settings.IS_ALLOWED_CREDENTIALS,
         allow_methods=settings.ALLOWED_METHODS,
         allow_headers=settings.ALLOWED_HEADERS,
+    )
+
+    fastapi_app.add_event_handler(
+        "startup",
+        lambda: execute_backend_server_event_handler(backend_app=app),
+    )
+    fastapi_app.add_event_handler(
+        "shutdown",
+        lambda: terminate_backend_server_event_handler(backend_app=app),
     )
 
     fastapi_app.include_router(router=default_router, prefix='')

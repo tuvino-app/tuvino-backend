@@ -2,7 +2,7 @@ import uuid
 from fastapi import HTTPException
 import logging
 
-from src.repository.supabase_repository import SupabaseRepository
+from src.repository.base import SupabaseRepository
 
 class WinesRepository(SupabaseRepository):
     _table_name = "vinos"
