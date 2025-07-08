@@ -1,26 +1,21 @@
-import uuid
 from fastapi import HTTPException
+
+import uuid
 import logging
 
-from src.repository.base import BaseRepository
+from src.repository.base import BaseRepository, Session
 
 from src.models.user import User
 
 class UsersRepository(BaseRepository):
-    _table_name = "usuarios"
+    def __init__(self, session: Session):
+        super().__init__(session)
 
-    def get_all_users(self):
-        return self.session.table(self._table_name).select("*").execute()
-
-    def get_user_by_id(self, user_uid: str):
+    def get_user_by_id(self, user_uid: str) -> User:
         try:
             uuid.UUID(user_uid)
         except ValueError:
             logging.error(f'El id {user_uid} no es un UUID valido')
             raise HTTPException(status_code=400, detail="Invalid user ID format")
 
-        usuario = self.session.table(self._table_name).select("*").eq("uid", user_uid).execute().data[0]
-        if not usuario:
-            logging.error(f'El usuario con id {user_uid} no existe')
-            raise HTTPException(status_code=404, detail="User not found")
-        return User(usuario['uid'], usuario['nombre'], usuario['email'])
+        return self.session.query(User).filter(User.uid == user_uid).first()

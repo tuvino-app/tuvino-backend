@@ -1,10 +1,11 @@
 import fastapi
 import random
 
-from fastapi import status, Depends, Path
+from fastapi import status, Depends, Path, HTTPException
+from src.api.dependencies import get_repository
 from src.repository.users_repository import UsersRepository
 
-from src.models.schemas.user import UserPreferences
+from src.models.schemas.user import UserPreferences, UserInfo
 
 router = fastapi.APIRouter(prefix="/users", tags=["users"])
 
@@ -37,14 +38,18 @@ async def get_recommendations(
     '/{user_id}',
     summary='Get information for a user',
     name='users:get-info',
-    response_model=None,
+    response_model=UserInfo,
     status_code=status.HTTP_200_OK,
 )
 async def get_user_info(
     user_id: str = Path(..., title="The ID of the account to get the info"),
-    users_repo: UsersRepository = Depends(UsersRepository),
+    users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository)),
 ):
-    return users_repo.get_user_by_id(user_id)
+    user = users_repo.get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return UserInfo(uid=user.uid_to_str(), username=user.username, email=user.email)
+
 
 @router.post(
     '/{user_id}',
@@ -56,6 +61,6 @@ async def get_user_info(
 async def update_user_preferences(
     user_preferences: UserPreferences,
     user_id: str = Path(..., title="The ID of the account to update"),
-    users_repo: UsersRepository = Depends(UsersRepository),
+    users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository)),
 ):
     return users_repo.get_user_by_id(user_id)

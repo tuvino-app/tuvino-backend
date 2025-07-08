@@ -1,9 +1,14 @@
+import uuid
+
 class User:
-    id: int
+    uid: uuid.UUID
     username: str
     email: str
 
-    def __init__(self, id: int, username: str, email: str):
-        self.id = id
+    def __init__(self, uid: uuid.UUID, username: str, email: str):
+        self.uid = uid
         self.username = username
         self.email = email
+
+    def uid_to_str(self):
+        return str(self.uid)

@@ -8,5 +8,13 @@ docker-compose-down:
 	docker compose -f compose.dev.yaml stop -t 1
 	docker compose -f compose.dev.yaml down
 
+create-migration:
+ifdef MESSAGE
+	docker exec tuvino-api alembic revision --autogenerate -m "$(MESSAGE)"
+	docker exec tuvino-api alembic upgrade head
+else
+	$(error ERROR: La variable MESSAGE no ha sido proporcionada. Uso: make migration MESSAGE="Tu mensaje de migración")
+endif
+
 test:
 	docker exec tuvino-api pytest
