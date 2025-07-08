@@ -10,4 +10,4 @@ router = fastapi.APIRouter(prefix="/preferences", tags=["preferences"])
 async def get_preferences(
     wines_repo = Depends(get_repository(repo_type=WinesRepository)),
 ):
-    return wines_repo.get_wine_preference_options()
+    return wines_repo.get_preference_options()

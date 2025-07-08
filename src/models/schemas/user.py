@@ -1,7 +1,11 @@
 from src.models.schemas.base import BaseSchemaModel
 
 class UserPreferences(BaseSchemaModel):
-    age_range: int
+    type: int
+    body: int
+    intensity: int
+    dryness: int
+    abv: int
 
 class UserInfo(BaseSchemaModel):
     uid: str
