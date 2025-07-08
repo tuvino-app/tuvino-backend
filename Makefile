@@ -18,3 +18,6 @@ endif
 
 test:
 	docker exec tuvino-api pytest
+
+migrate:
+	docker exec tuvino-api alembic upgrade head
