@@ -19,5 +19,18 @@ endif
 test:
 	docker exec tuvino-api pytest
 
-migrate:
+upgrade:
 	docker exec tuvino-api alembic upgrade head
+
+restart:
+	docker compose -f compose.dev.yaml stop -t 1
+	docker compose -f compose.dev.yaml down -v
+	make docker-compose-up
+	make migrate
+
+downgrade:
+ifdef VERSION
+	docker exec tuvino-api alembic downgrade "$(VERSION)"
+else
+	$(error ERROR: Especifique una version a la que retroceder")
+endif

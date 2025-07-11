@@ -1,5 +1,6 @@
 from src.repository.config.table import Base
 from src.repository.config.database import db
+from src.repository.table_models import *
 
 import logging
 from logging.config import fileConfig

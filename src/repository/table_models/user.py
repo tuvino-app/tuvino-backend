@@ -10,7 +10,6 @@ class User(Base):
         UUID(as_uuid=True),
         primary_key=True,
         server_default=func.gen_random_uuid(),
-        unique=True,
         nullable=False
     )
     name = Column(String, nullable=False)

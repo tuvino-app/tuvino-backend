@@ -9,5 +9,3 @@ class DBTable(DeclarativeBase):
 
 
 Base: typing.Type[DeclarativeBase] = DBTable
-
-from src.repository.table_models import *
