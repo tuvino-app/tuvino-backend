@@ -1,12 +1,19 @@
 import fastapi
-from fastapi import Depends
+from fastapi import Depends, status
 
+from src.models.schemas.preference import PreferenceAttributes
 from src.api.dependencies import get_repository
 from src.repository.preferences_repository import PreferencesRepository
 
 router = fastapi.APIRouter(prefix="/preferences", tags=["preferences"])
 
-@router.get('/')
+@router.get(
+    '/',
+    summary='Get options to preferences, listed per type',
+    name='preferences:get-options',
+    response_model=PreferenceAttributes,
+    status_code=status.HTTP_200_OK,
+)
 async def get_preferences(
     preferences_repo = Depends(get_repository(repo_type=PreferencesRepository)),
 ):
