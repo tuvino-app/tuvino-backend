@@ -4,6 +4,7 @@ import uvicorn
 from dotenv import load_dotenv
 
 from fastapi import FastAPI, HTTPException
+from fastapi.exceptions import ResponseValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -38,11 +39,12 @@ def initialize_app() -> fastapi.FastAPI:
             content={"error": exc.detail},
         )
 
-    @fastapi_app.exception_handler(Exception)
-    async def internal_server_error_handler(request, exc):
+    @fastapi_app.exception_handler(ResponseValidationError)
+    async def validation_exception_handler(request, exc):
+        logging.info(exc)
         return JSONResponse(
             status_code=500,
-            content={"error": exc.detail},
+            content={"errors": exc.errors()},
         )
 
     fastapi_app.add_middleware(

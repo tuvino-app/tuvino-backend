@@ -32,6 +32,7 @@ def upgrade() -> None:
     sa.Column('category_id', sa.Integer(), nullable=True),
     sa.Column('option', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
+    sa.Column('value', sa.Float(), nullable=True),
     sa.ForeignKeyConstraint(['category_id'], ['preference_categories.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -64,49 +65,50 @@ def upgrade() -> None:
         sa.table('preference_options',
             sa.Column('category_id', sa.Integer()),
             sa.Column('option', sa.String()),
-            sa.Column('description', sa.String())
+            sa.Column('description', sa.String()),
+            sa.Column('value', sa.Float())
         ),
         [
             # Types (category_id = 1)
-            {'category_id': 1, 'option': 'Tinto', 'description': 'Rico y profundo en sabor'},
-            {'category_id': 1, 'option': 'Blanco', 'description': 'Ligero y refrescante'},
-            {'category_id': 1, 'option': 'Rosado', 'description': 'Una combinación de características de vinos tintos y blancos'},
-            {'category_id': 1, 'option': 'Espumoso', 'description': 'Burbujeante y festivo'},
-            {'category_id': 1, 'option': 'No sabe/no contesta', 'description': None},
+            {'category_id': 1, 'option': 'Tinto', 'description': 'Rico y profundo en sabor', 'value': 1.00},
+            {'category_id': 1, 'option': 'Blanco', 'description': 'Ligero y refrescante', 'value': 0.01},
+            {'category_id': 1, 'option': 'Rosado', 'description': 'Una combinación de características de vinos tintos y blancos', 'value': 0.50},
+            {'category_id': 1, 'option': 'Espumoso', 'description': 'Burbujeante y festivo', 'value': 2.00},
+            {'category_id': 1, 'option': 'No sabe/no contesta', 'description': None, 'value': None},
 
             # Bodies (category_id = 2)
-            {'category_id': 2, 'option': 'Muy ligero', 'description': 'como un sorbo delicado sin mucha presencia'},
-            {'category_id': 2, 'option': 'Ligero', 'description': 'con algo más de presencia que el agua'},
-            {'category_id': 2, 'option': 'Medio', 'description': 'equilibrado y fácil de beber'},
-            {'category_id': 2, 'option': 'Robusto', 'description': 'un vino con sustancia notable'},
+            {'category_id': 2, 'option': 'Muy ligero', 'description': 'como un sorbo delicado sin mucha presencia', 'value': 0.01},
+            {'category_id': 2, 'option': 'Ligero', 'description': 'con algo más de presencia que el agua', 'value': 0.25},
+            {'category_id': 2, 'option': 'Medio', 'description': 'equilibrado y fácil de beber', 'value': 0.50},
+            {'category_id': 2, 'option': 'Robusto', 'description': 'un vino con sustancia notable', 'value': 0.75},
             {'category_id': 2, 'option': 'De cuerpo completo',
-             'description': 'intenso, robusto y con mucha presencia en el paladar'},
-            {'category_id': 2, 'option': 'No sabe/no contesta', 'description': None},
+             'description': 'intenso, robusto y con mucha presencia en el paladar', 'value': 1.00},
+            {'category_id': 2, 'option': 'No sabe/no contesta', 'description': None, 'value': None},
 
             # Intensities (category_id = 3)
-            {'category_id': 3, 'option': 'Muy sutil', 'description': 'una insinuación apenas perceptible del sabor'},
-            {'category_id': 3, 'option': 'Suave', 'description': 'presente sin llegar a ser abrumador'},
+            {'category_id': 3, 'option': 'Muy sutil', 'description': 'una insinuación apenas perceptible del sabor', 'value': '0.01'},
+            {'category_id': 3, 'option': 'Suave', 'description': 'presente sin llegar a ser abrumador', 'value': 0.25},
             {'category_id': 3, 'option': 'Equilibrada',
-             'description': 'una buena mezcla de sabores que se hacen notar de manera constante'},
-            {'category_id': 3, 'option': 'Intensa', 'description': 'los sabores se destacan con claridad'},
-            {'category_id': 3, 'option': 'Muy intensa', 'description': 'una explosión de sabor en cada sorbo'},
-            {'category_id': 3, 'option': 'No sabe/no contesta', 'description': None},
+             'description': 'una buena mezcla de sabores que se hacen notar de manera constante', 'value': 0.50},
+            {'category_id': 3, 'option': 'Intensa', 'description': 'los sabores se destacan con claridad', 'value': 0.75},
+            {'category_id': 3, 'option': 'Muy intensa', 'description': 'una explosión de sabor en cada sorbo', 'value': 1.00},
+            {'category_id': 3, 'option': 'No sabe/no contesta', 'description': None, 'value': None},
 
             # Dryness (category_id = 4)
-            {'category_id': 4, 'option': 'Muy suave', 'description': 'sin sensación alguna de sequedad'},
-            {'category_id': 4, 'option': 'Mayormente suave', 'description': 'con un leve toque de sequedad'},
+            {'category_id': 4, 'option': 'Muy suave', 'description': 'sin sensación alguna de sequedad', 'value': 0.01},
+            {'category_id': 4, 'option': 'Mayormente suave', 'description': 'con un leve toque de sequedad', 'value': 0.25},
             {'category_id': 4, 'option': 'Con una textura moderada',
-             'description': 'equilibrado, entre suavidad y un toque de sequedad'},
-            {'category_id': 4, 'option': 'Con textura marcada', 'description': 'se nota algo de sequedad en la lengua'},
+             'description': 'equilibrado, entre suavidad y un toque de sequedad', 'value': 0.50},
+            {'category_id': 4, 'option': 'Con textura marcada', 'description': 'se nota algo de sequedad en la lengua', 'value': 0.75},
             {'category_id': 4, 'option': 'Con fuerte textura',
-             'description': 'una sensación de sequedad pronunciada que le da estructura al vino'},
-            {'category_id': 4, 'option': 'No sabe/no contesta', 'description': None},
+             'description': 'una sensación de sequedad pronunciada que le da estructura al vino', 'value': 1.00},
+            {'category_id': 4, 'option': 'No sabe/no contesta', 'description': None, 'value': None},
 
             # ABV (category_id = 5)
-            {'category_id': 5, 'option': 'Suave', 'description': None},
-            {'category_id': 5, 'option': 'Moderado', 'description': None},
-            {'category_id': 5, 'option': 'Alto contenido alcohólico', 'description': None},
-            {'category_id': 5, 'option': 'No sabe/no contesta', 'description': None}
+            {'category_id': 5, 'option': 'Suave', 'description': None, 'value': 11.0},
+            {'category_id': 5, 'option': 'Moderado', 'description': None, 'value': 12.25},
+            {'category_id': 5, 'option': 'Alto contenido alcohólico', 'description': None, 'value': 13.5},
+            {'category_id': 5, 'option': 'No sabe/no contesta', 'description': None, 'value': None}
         ]
     )
 

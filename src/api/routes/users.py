@@ -1,38 +1,37 @@
 import fastapi
-import random
+import logging
 
-from fastapi import status, Depends, Path, HTTPException
+from fastapi import status, Depends, Path, HTTPException, Query
 from src.api.dependencies import get_repository
 from src.repository.users_repository import UsersRepository
+from src.repository.preferences_repository import PreferencesRepository
+from src.repository.wine_recommendations_repository import WineRecommendationsRepository
 
 from src.models.schemas.user import UserPreferences, UserInfo
+from src.models.schemas.recommendations import WineRecommendations
 
 router = fastapi.APIRouter(prefix="/users", tags=["users"])
 
-wines = [
-    'Reserva Chardonnay',
-    'Merlot Reserve Trocken',
-    'Los Cardos Malbec',
-    'Pinot Noir',
-    'Premiere Napa Valley Cabernet Sauvignon',
-    'Château Chemin Royal Moulis-en-Médoc',
-    'Cabernet Sauvignon'
-]
-
 @router.get(
-    '/{user_id}/recommendations',
-    summary='Get recommendations for a user',
-    name='users:get-recommendations',
-    response_model=None,
+    '/recommendations',
+    summary='Get wine recommendations for a specific user',
+    name='recommendations:get-user-recommendations',
+    response_model=WineRecommendations,
     status_code=status.HTTP_200_OK,
 )
-async def get_recommendations(
-    user_id: int = Path(..., title="The ID of the account to get the recommendations for")
+async def get_wine_recommendations(
+    user_id: str = Query(..., description="ID of the user to get recommendations for"),
+    limit: int = Query(3, description="Maximum number of recommendations to return", ge=1, le=20),
+    users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository)),
+    preferences_repo: PreferencesRepository = Depends(get_repository(repo_type=PreferencesRepository)),
 ):
-    return {
-        'userId': user_id,
-        'recommendations': random.sample(wines, 3)
-    }
+    try:
+        recommendations_repo = WineRecommendationsRepository()
+        user = users_repo.get_user_by_id(user_id)
+        recommended_wines = recommendations_repo.get_recommendations(user, limit)
+        return recommended_wines
+    except KeyError as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get(
     '/{user_id}',
@@ -45,9 +44,10 @@ async def get_user_info(
     user_id: str = Path(..., title="The ID of the account to get the info"),
     users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository)),
 ):
-    user = users_repo.get_user_by_id(user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    try:
+        user = users_repo.get_user_by_id(user_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     return UserInfo(uid=user.uid_to_str(), username=user.username, email=user.email)
 
 
@@ -63,4 +63,10 @@ async def update_user_preferences(
     user_id: str = Path(..., title="The ID of the account to update"),
     users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository)),
 ):
-    return users_repo.get_user_by_id(user_id)
+    try:
+        user = users_repo.get_user_by_id(user_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    user.add_preferences(user_preferences)
+    return users_repo.save(user)

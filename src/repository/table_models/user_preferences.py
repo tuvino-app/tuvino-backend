@@ -1,4 +1,5 @@
 from sqlalchemy import select, Column, String, Integer, ForeignKey
+from sqlalchemy.orm import relationship
 from src.repository.config.table import Base
 
 class UserPreference(Base):
@@ -13,3 +14,4 @@ class UserPreference(Base):
     user_id = Column(ForeignKey("users.uid"))
     option_id = Column(ForeignKey("preference_options.id"))
     weight = Column(Integer, nullable=False, default=1)
+    user = relationship("User", back_populates="preferences")

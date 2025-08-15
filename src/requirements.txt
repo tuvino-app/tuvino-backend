@@ -12,3 +12,4 @@ pydantic-settings
 SQLAlchemy>=2.0.23
 uuid
 psycopg2-binary>=2.9.3
+requests
