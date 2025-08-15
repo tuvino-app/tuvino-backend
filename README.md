@@ -38,12 +38,17 @@ Cuando se inicia el proyecto de `Docker Compose`, estas son las URLs:
     make create-migration MESSAGE="tu_mensaje_de_migración"
     ```
 
-8.  Si simplemente queres migrar la base de datos con todas las versiones creadas anteriormente, debes ejecutar:
+8.  Si simplemente queres migrar la base de datos a la última version creada, debes ejecutar:
     ```shell
-    make migrate
+    make upgrade
     ```
 
-9.  Para reiniciar todos los contenedores y empezar de cero, debes ejecutar:
+9.  Para volver a una versión determinada, buscar el hash de la misma ejecutar:
+    ```shell
+    make downgrade VERSION="hash"
+    ```
+
+10.  Para reiniciar todos los contenedores y empezar de cero, debes ejecutar:
     ```shell
     make restart
     ```
