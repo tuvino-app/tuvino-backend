@@ -24,6 +24,7 @@ class User(Base):
     def set_preferences(self, preferences: list):
         for user_preference in preferences:
             self.preferences.append(UserPreference(user_id=self.uid, option_id=user_preference.id))
+        self.onboarding_completed = True
 
     def uid_to_str(self):
         return str(self.uid)

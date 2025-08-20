@@ -5,6 +5,7 @@ class User:
     uid: uuid.UUID
     username: str
     email: str
+    onboarding_completed: bool
     preferences: list
 
     def __init__(self, uid: uuid.UUID, username: str, email: str):
@@ -20,3 +21,4 @@ class User:
         for category, preference_id in preferences:
             prefence = Preference(preference_id, '', '')
             self.preferences.append(prefence)
+        self.onboarding_completed = True
