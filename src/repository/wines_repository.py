@@ -14,10 +14,15 @@ class WinesRepository:
 
     @staticmethod
     def get_by_name(wine_name: str):
-        response = supabase.table(WinesRepository.table_name).select("*").eq("wine_name", wine_name).execute()
+        # Búsqueda parcial: contiene la cadena (insensible a mayúsculas/minúsculas)
+        response = supabase.table(WinesRepository.table_name).select("*").ilike("wine_name", "%" + wine_name + "%").execute()
         if not getattr(response, "data", None):
             return []
-        return [WineSchema(**item) for item in response.data]
+        
+        # Ordenar: primero los que empiecen con la cadena, luego los que la contengan
+        wines = [WineSchema(**item) for item in response.data]
+        wines.sort(key=lambda w: (not w.wine_name.lower().startswith(wine_name.lower()), w.wine_name.lower()))
+        return wines
 
     @staticmethod
     def create(wine: WineSchema):
