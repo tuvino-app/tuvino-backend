@@ -1,8 +1,8 @@
 """create_wine_ratings_table
 
-Revision ID: 88f8912edb1e
+Revision ID: e96ee6e5d7a8
 Revises: 39ed92195d36
-Create Date: 2025-09-11 19:07:43.097717
+Create Date: 2025-09-11 19:34:37.250768
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '88f8912edb1e'
+revision: str = 'e96ee6e5d7a8'
 down_revision: Union[str, Sequence[str], None] = '39ed92195d36'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

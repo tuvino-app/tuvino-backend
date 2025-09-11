@@ -24,6 +24,3 @@ class WineRating(Base):
         UUID(as_uuid=True),
         nullable=True
     )
-
-    wine = relationship("Wine", back_populates="ratings")
-    user = relationship("User", back_populates="wine_ratings")
