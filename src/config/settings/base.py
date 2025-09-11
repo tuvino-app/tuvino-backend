@@ -27,6 +27,9 @@ class BackendBaseSettings(pydantic_settings.BaseSettings):
     DB_POSTGRES_PORT: str = decouple.config("POSTGRES_PORT", cast=str)  # type: ignore
     DB_POSTGRES_NAME: str = decouple.config("POSTGRES_DB", cast=str)  # type: ignore
 
+    SUPABASE_URL: str = decouple.config("SUPABASE_URL", cast=str)  # type: ignore
+    SUPABASE_KEY: str = decouple.config("SUPABASE_KEY", cast=str)  # type: ignore
+
     API_PREFIX: str = "/api"
     DOCS_URL: str = "/docs"
     OPENAPI_URL: str = "/openapi.json"
