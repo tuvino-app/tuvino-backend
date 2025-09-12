@@ -7,6 +7,7 @@ from src.repository.base import BaseRepository, Session
 
 from src.models.user import User
 from src.repository.table_models.user import User as UserModel
+from src.repository.preferences_repository import PreferencesRepository
 from src.repository.table_models.user_preferences import UserPreference as PreferencesModel
 
 class UsersRepository(BaseRepository):
@@ -23,7 +24,11 @@ class UsersRepository(BaseRepository):
         user = self.session.query(UserModel).filter(UserModel.uid == user_uid).first()
         if not user:
             raise KeyError('El usuario no existe')
-        return User(uid=user.uid, username=user.name, email=user.email)
+        user = User(uid=user.uid, username=user.name, email=user.email)
+        user.add_preferences(PreferencesRepository(self.session).get_preferences(user.uid))
+        return user
+
+
 
     def save(self, user: User):
         logging.info(f'User: {user}')

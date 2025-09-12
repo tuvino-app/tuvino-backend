@@ -1,4 +1,5 @@
 import uuid
+import logging
 from src.models.preference import Preference
 
 class User:
@@ -18,7 +19,22 @@ class User:
         return str(self.uid)
 
     def add_preferences(self, preferences):
-        for category, preference_id in preferences:
+        logging.info(preferences)
+        if not preferences:
+            raise ValueError("El usuario no tiene preferencias registradas")
+        for preference_id in preferences:
             prefence = Preference(preference_id, '', '')
             self.preferences.append(prefence)
         self.onboarding_completed = True
+
+    def favorite_type(self):
+        logging.info(self.preferences)
+
+    def favorite_body(self):
+        return None
+
+    def favorite_dryness(self):
+        return None
+
+    def favorite_abv(self):
+        return None

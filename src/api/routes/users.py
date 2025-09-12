@@ -49,10 +49,9 @@ async def get_user_info(
 ):
     try:
         user = users_repo.get_user_by_id(user_id)
+        return UserInfo(uid=user.uid_to_str(), username=user.username, email=user.email)
     except KeyError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    return UserInfo(uid=user.uid_to_str(), username=user.username, email=user.email)
-
 
 @router.post(
     '/{user_id}',

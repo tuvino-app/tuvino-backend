@@ -7,6 +7,7 @@ from src.models.preference import Preference
 from src.models.preference_category import PreferenceCategory
 from src.repository.table_models.preference_options import PreferenceOption as PreferenceOptionModel
 from src.repository.table_models.preference_categories import PreferenceCategory as PreferenceCategoryModel
+from src.repository.table_models.user_preferences import UserPreference as UserPreferenceModel
 
 class PreferencesRepository(BaseRepository):
     def __init__(self, session: Session):
@@ -24,3 +25,30 @@ class PreferencesRepository(BaseRepository):
             preference.set_category(category)
             results.append(preference)
         return results
+
+    def get_preferences(self, user_id):
+        preferences = (self.session.query(
+            UserPreferenceModel,
+            PreferenceOptionModel,
+            PreferenceCategoryModel,
+        ).join(
+            PreferenceOptionModel,
+            UserPreferenceModel.option_id == PreferenceOptionModel.id
+        )
+        .join(
+            PreferenceCategoryModel,
+            PreferenceCategoryModel.id == PreferenceOptionModel.category_id,
+        )
+        .filter(
+            UserPreferenceModel.user_id == user_id
+        ).all())
+        user_preferences = []
+        for (user_pref, option, category) in preferences:
+            pref = Preference(
+                option.id,
+                option.option,
+                option.description,
+            )
+            pref.set_category(PreferenceCategory(category.id, category.name, category.description))
+            user_preferences.append(pref)
+        return user_preferences

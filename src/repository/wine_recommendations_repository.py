@@ -19,10 +19,10 @@ class WineRecommendationsRepository:
     def get_recommendations(self, user: User, limit: int) -> list[dict]:
         response = requests.post(f'{self.model_api_url}',
                                  json.dumps({
-                                     'type': 'Red',
-                                     'body': 1,
-                                     'dryness': 1,
-                                     'abv': 10
+                                     'type': user.favorite_type(),
+                                     'body': user.favorite_body(),
+                                     'dryness': user.favorite_dryness(),
+                                     'abv': user.favorite_abv()
                                  }),
                                  headers={'Content-Type': 'application/json'})
         logging.info(f'Llamada al modelo devuelve: {response}')
