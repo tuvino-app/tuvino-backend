@@ -19,22 +19,23 @@ class User:
         return str(self.uid)
 
     def add_preferences(self, preferences):
-        logging.info(preferences)
         if not preferences:
             raise ValueError("El usuario no tiene preferencias registradas")
-        for preference_id in preferences:
-            prefence = Preference(preference_id, '', '')
-            self.preferences.append(prefence)
+        self.preferences = preferences
         self.onboarding_completed = True
 
     def favorite_type(self):
-        logging.info(self.preferences)
+        types = {'Tinto': 'Red', 'Blanco': 'White', 'Rosado': 'Rose', 'Espumoso': 'Sparkling'}
+        for preference in self.preferences:
+            if preference.category.category == 'types':
+                return types[preference.option]
+        return None
 
     def favorite_body(self):
-        return None
+        return 1
 
     def favorite_dryness(self):
-        return None
+        return 1
 
     def favorite_abv(self):
-        return None
+        return 11
