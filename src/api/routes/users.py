@@ -29,7 +29,10 @@ async def get_wine_recommendations(
         recommendations_repo = WineRecommendationsRepository()
         user = users_repo.get_user_by_id(user_id)
         recommended_wines = recommendations_repo.get_recommendations(user, limit)
-        return recommended_wines
+        return WineRecommendations(
+            user_id=user_id,
+            recommendations=recommended_wines
+        )
     except KeyError as e:
         raise HTTPException(status_code=500, detail=str(e))
 
