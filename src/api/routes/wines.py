@@ -1,6 +1,7 @@
 import fastapi
+import logging
 from fastapi import status, HTTPException, Path, Query
-from src.models.schemas.wines import WineSchema
+from src.models.schemas.wine import WineSchema, WineFilters
 from src.repository.wines_repository import WinesRepository
 
 router = fastapi.APIRouter(prefix="/wines", tags=["wines"])
@@ -12,11 +13,42 @@ repo = WinesRepository()
     response_model=list[WineSchema],
     status_code=status.HTTP_200_OK,
 )
-async def get_wine_by_name(wine_name: str = Query(..., description="Wine name")):
-    wines = repo.get_by_name(wine_name)
-    if not wines:
-        raise HTTPException(status_code=404, detail="No wines found")
-    return wines
+async def get_wine_by_name(wine_name: str = Query(None, description="Wine name"),
+                           wine_type: str = Query(None, description="Type of wine"),
+                           winery: str = Query(None, description="Name of winery"),
+                           country: str = Query(None, description="Region of origin"),
+                           region: str = Query(None, description="Region of origin"),
+                           min_abv: float = Query(None, description="Minimum ABV"),
+                           max_abv: float = Query(None, description="Maximum ABV")):
+    try:
+        filters = WineFilters(
+            wine_name=wine_name,
+            wine_type=wine_type,
+            winery=winery,
+            country=country,
+            region=region,
+            min_abv=min_abv,
+            max_abv=max_abv
+        )
+
+        wines = repo.get_by_filters(filters)
+
+        if not wines:
+            raise HTTPException(
+                status_code=404,
+                detail="No wines found matching the criteria"
+            )
+
+        return wines
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logging.error(f"Error retrieving wines: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error while retrieving wines"
+        )
 
 @router.get(
     "/{wine_id}",

@@ -1,5 +1,7 @@
 from src.models.schemas.base import BaseSchemaModel
 from typing import Optional
+from pydantic import BaseModel, field_validator
+import uuid
 
 class WineBase(BaseSchemaModel):
     id: str
@@ -17,10 +19,37 @@ class WineBase(BaseSchemaModel):
     winery: str
     vintages: str
 
-class WineFilters(BaseSchemaModel):
-    type: Optional[str] = None
-    body: Optional[str] = None
+class WineFilters(BaseModel):
+    wine_name: Optional[str] = None
+    wine_type: Optional[str] = None
+    winery: Optional[str] = None
     country: Optional[str] = None
     region: Optional[str] = None
-    winery: Optional[str] = None
-    grapes: Optional[str] = None
+    min_abv: Optional[float] = None
+    max_abv: Optional[float] = None
+
+    @field_validator('min_abv', 'max_abv', mode='before')
+    @classmethod
+    def parse_abv(cls, value):
+        if value is None:
+            return None
+        try:
+            return float(value)
+        except (ValueError, TypeError):
+            return None
+
+class WineSchema(BaseSchemaModel):
+    wine_id: int
+    wine_name: str
+    type: str
+    elaborate: str
+    grapes: str
+    harmonize: str
+    abv: float
+    body: str
+    acidity: str
+    country: str
+    region: str
+    winery: str
+    vintages: str
+    id: Optional[uuid.UUID] = None

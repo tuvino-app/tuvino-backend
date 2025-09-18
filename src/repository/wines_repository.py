@@ -1,5 +1,7 @@
+from typing import Any
+
 from src.utilities.supabase_client import supabase
-from src.models.schemas.wines import WineSchema
+from src.models.schemas.wine import WineSchema, WineFilters
 import uuid
 
 class WinesRepository:
@@ -13,15 +15,41 @@ class WinesRepository:
         return WineSchema(**response.data)
 
     @staticmethod
-    def get_by_name(wine_name: str):
-        # Búsqueda parcial: contiene la cadena (insensible a mayúsculas/minúsculas)
-        response = supabase.table(WinesRepository.table_name).select("*").ilike("wine_name", "%" + wine_name + "%").execute()
+    def get_by_filters(filters: WineFilters) -> list[Any] | list[WineSchema]:
+        query = supabase.table(WinesRepository.table_name).select("*")
+
+        text_filters = {
+            'wine_name': filters.wine_name,
+            'type': filters.wine_type,
+            'winery': filters.winery,
+            'country': filters.country,
+            'region': filters.region
+        }
+
+        for field, value in text_filters.items():
+            if value:
+                query = query.ilike(field, f"%{value}%")
+
+        if filters.min_abv is not None:
+            query = query.gte("abv", filters.min_abv)
+        if filters.max_abv is not None:
+            query = query.lte("abv", filters.max_abv)
+
+        response = query.execute()
+
         if not getattr(response, "data", None):
             return []
-        
-        # Ordenar: primero los que empiecen con la cadena, luego los que la contengan
+
         wines = [WineSchema(**item) for item in response.data]
-        wines.sort(key=lambda w: (not w.wine_name.lower().startswith(wine_name.lower()), w.wine_name.lower()))
+
+        # Ordenar por relevancia si hay búsqueda por nombre
+        if filters.wine_name:
+            search_term = filters.wine_name.lower()
+            wines.sort(key=lambda w: (
+                not w.wine_name.lower().startswith(search_term),
+                w.wine_name.lower()
+            ))
+
         return wines
 
     @staticmethod
