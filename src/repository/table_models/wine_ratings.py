@@ -24,3 +24,9 @@ class WineRating(Base):
         UUID(as_uuid=True),
         nullable=True
     )
+
+    def __init__(self, wine_id: int, rating: float, user_id: str):
+        self.wine_id = wine_id
+        self.rating = rating
+        self.user_id = user_id
+        self.date = func.timezone('UTC-3', func.now())

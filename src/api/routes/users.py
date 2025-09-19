@@ -6,8 +6,9 @@ from src.api.dependencies import get_repository
 from src.repository.users_repository import UsersRepository
 from src.repository.preferences_repository import PreferencesRepository
 from src.repository.wine_recommendations_repository import WineRecommendationsRepository
+from src.repository.ratings_repository import WineRatingsRepository
 
-from src.models.schemas.user import UserPreferences, UserInfo
+from src.models.schemas.user import UserPreferences, UserInfo, UserWineRating
 from src.models.schemas.recommendations import WineRecommendations
 
 router = fastapi.APIRouter(prefix="/users", tags=["users"])
@@ -72,3 +73,25 @@ async def update_user_preferences(
 
     user.add_preferences(user_preferences)
     return users_repo.save(user)
+
+@router.post(
+    '/{user_id}/ratings',
+    summary='Post user ratings',
+    name='users:post-ratings',
+    response_model=None,
+    status_code=status.HTTP_201_CREATED,
+)
+async def post_user_rating(
+    user_rating: UserWineRating,
+    user_id: str = Path(..., title="The ID of the user posting the rating"),
+    users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository)),
+    ratings_repo: WineRatingsRepository = Depends(get_repository(repo_type=WineRatingsRepository)),
+):
+    try:
+        user = users_repo.get_user_by_id(user_id)
+        rating = user.rate_wine(user_rating.wine_id, user_rating.rating)
+        return ratings_repo.save(rating)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

@@ -11,3 +11,7 @@ class UserInfo(BaseSchemaModel):
     uid: str
     username: str
     email: str
+
+class UserWineRating(BaseSchemaModel):
+    wine_id: int
+    rating: int

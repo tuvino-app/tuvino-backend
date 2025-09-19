@@ -1,6 +1,7 @@
 import uuid
 import logging
 from src.models.preference import Preference
+from src.models.rating import Rating
 
 class User:
     uid: uuid.UUID
@@ -39,3 +40,6 @@ class User:
 
     def favorite_abv(self):
         return 11
+
+    def rate_wine(self, wine_id, rating):
+        return Rating(self.uid, wine_id, rating)
