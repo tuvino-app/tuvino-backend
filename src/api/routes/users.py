@@ -104,7 +104,7 @@ async def post_user_rating(
     response_model=None,
     status_code=status.HTTP_201_CREATED,
 )
-async def post_user_rating(
+async def post_user_favorite(
     user_id: str = Path(..., title="The ID of the user posting the favorite wine"),
     wine_id: int = Path(..., title="The ID of the wine marked as favorite"),
     users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository))
@@ -115,6 +115,28 @@ async def post_user_rating(
         wine = wines_repo.get_by_id(wine_id)
         user.add_favorite(wine)
         users_repo.save(user)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.delete(
+    '/{user_id}/favorites/{wine_id}',
+    summary='Delete user favorite wine',
+    name='users:post-favorites',
+    response_model=None,
+    status_code=status.HTTP_200_OK,
+)
+async def delete_user_favorite(
+    user_id: str = Path(..., title="The ID of the user deleting the favorite wine"),
+    wine_id: int = Path(..., title="The ID of the wine marked as favorite"),
+    users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository))
+):
+    try:
+        wines_repo = WinesRepository()
+        user = users_repo.get_user_by_id(user_id)
+        wine = wines_repo.get_by_id(wine_id)
+        users_repo.delete_favorite_wine(user, wine)
     except KeyError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except ValueError as e:

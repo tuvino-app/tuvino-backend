@@ -3,6 +3,7 @@ from fastapi import HTTPException
 import uuid
 import logging
 
+from src.models.wine import Wine
 from src.repository.base import BaseRepository, Session
 
 from src.models.user import User
@@ -55,3 +56,11 @@ class UsersRepository(BaseRepository):
 
         self.session.commit()
         return user
+
+    def delete_favorite_wine(self, user: User, wine):
+        favorite_ids = [fav.wine_id for fav in user.get_favorites()]
+        if wine.wine_id not in favorite_ids:
+            raise ValueError('Wine not in favorites')
+
+        self.session.query(FavoriteWines).filter(FavoriteWines.user_id == user.uid_to_str(), FavoriteWines.wine_id == wine.wine_id).delete()
+        self.session.commit()
