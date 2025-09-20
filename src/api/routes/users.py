@@ -9,7 +9,8 @@ from src.repository.wines_repository import WinesRepository
 from src.repository.wine_recommendations_repository import WineRecommendationsRepository
 from src.repository.ratings_repository import WineRatingsRepository
 
-from src.models.schemas.user import UserPreferences, UserInfo, UserWineRating
+from src.models.schemas.user import UserPreferences, UserInfo, UserWineRating, UserFavoriteWines
+from src.models.schemas.wine import WineFavorites
 from src.models.schemas.recommendations import WineRecommendations
 
 router = fastapi.APIRouter(prefix="/users", tags=["users"])
@@ -97,6 +98,37 @@ async def post_user_rating(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@router.get(
+    '/{user_id}/favorites',
+    summary='Get user favorite wines',
+    name='users:get-favorites',
+    response_model=list,
+    status_code=status.HTTP_200_OK,
+)
+async def get_user_favorites(
+    user_id: str = Path(..., title="The ID of the user getting the favorites"),
+    users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository)),
+):
+    try:
+        user = users_repo.get_user_by_id(user_id)
+        return UserFavoriteWines(wines=[
+            WineFavorites(
+                id=wine.id,
+                name=wine.name,
+                type=wine.type,
+                elaborate=wine.elaborate,
+                abv=wine.abv,
+                body=wine.body,
+                country=wine.country,
+                region=wine.region,
+                winery=wine.winery,
+            ) for wine in user.get_favorites()
+        ])
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 @router.post(
     '/{user_id}/favorites/{wine_id}',
     summary='Post user favorite wine',
@@ -133,10 +165,8 @@ async def delete_user_favorite(
     users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository))
 ):
     try:
-        wines_repo = WinesRepository()
         user = users_repo.get_user_by_id(user_id)
-        wine = wines_repo.get_by_id(wine_id)
-        users_repo.delete_favorite_wine(user, wine)
+        users_repo.delete_favorite_wine(user, wine_id)
     except KeyError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except ValueError as e:

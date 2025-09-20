@@ -2,7 +2,7 @@ import uuid
 import logging
 from src.models.preference import Preference
 from src.models.rating import Rating
-from src.models.wines import Wine
+from src.models.wine import Wine
 
 class User:
     uid: uuid.UUID
@@ -48,6 +48,9 @@ class User:
 
     def add_favorite(self, wine: Wine):
         self.favorites.append(wine)
+
+    def set_favorites(self, favorites: list):
+        self.favorites = favorites
 
     def get_favorites(self):
         return self.favorites

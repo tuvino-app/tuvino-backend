@@ -15,3 +15,6 @@ class UserInfo(BaseSchemaModel):
 class UserWineRating(BaseSchemaModel):
     wine_id: int
     rating: int
+
+class UserFavoriteWines(BaseSchemaModel):
+    wines: list
