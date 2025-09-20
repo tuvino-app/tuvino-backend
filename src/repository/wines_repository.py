@@ -9,9 +9,9 @@ class WinesRepository:
 
     @staticmethod
     def get_by_id(wine_id: int):
-        response = supabase.table(WinesRepository.table_name).select("*").eq("wine_id", wine_id).single().execute()
+        response = supabase.table(WinesRepository.table_name).select("*").eq("wine_id", wine_id).maybe_single().execute()
         if not getattr(response, "data", None):
-            return None
+            raise KeyError('Wine not found')
         return WineSchema(**response.data)
 
     @staticmethod

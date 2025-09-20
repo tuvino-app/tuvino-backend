@@ -2,6 +2,7 @@ import uuid
 import logging
 from src.models.preference import Preference
 from src.models.rating import Rating
+from src.models.wines import Wine
 
 class User:
     uid: uuid.UUID
@@ -9,6 +10,7 @@ class User:
     email: str
     onboarding_completed: bool
     preferences: list
+    favorites: list
 
     def __init__(self, uid: uuid.UUID, username: str, email: str):
         self.uid = uid
@@ -43,3 +45,9 @@ class User:
 
     def rate_wine(self, wine_id, rating):
         return Rating(self.uid, wine_id, rating)
+
+    def add_favorite(self, wine: Wine):
+        self.favorites.append(wine)
+
+    def get_favorites(self):
+        return self.favorites

@@ -5,6 +5,7 @@ from fastapi import status, Depends, Path, HTTPException, Query
 from src.api.dependencies import get_repository
 from src.repository.users_repository import UsersRepository
 from src.repository.preferences_repository import PreferencesRepository
+from src.repository.wines_repository import WinesRepository
 from src.repository.wine_recommendations_repository import WineRecommendationsRepository
 from src.repository.ratings_repository import WineRatingsRepository
 
@@ -91,6 +92,29 @@ async def post_user_rating(
         user = users_repo.get_user_by_id(user_id)
         rating = user.rate_wine(user_rating.wine_id, user_rating.rating)
         return ratings_repo.save(rating)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.post(
+    '/{user_id}/favorites/{wine_id}',
+    summary='Post user favorite wine',
+    name='users:post-favorites',
+    response_model=None,
+    status_code=status.HTTP_201_CREATED,
+)
+async def post_user_rating(
+    user_id: str = Path(..., title="The ID of the user posting the favorite wine"),
+    wine_id: int = Path(..., title="The ID of the wine marked as favorite"),
+    users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository))
+):
+    try:
+        wines_repo = WinesRepository()
+        user = users_repo.get_user_by_id(user_id)
+        wine = wines_repo.get_by_id(wine_id)
+        user.add_favorite(wine)
+        users_repo.save(user)
     except KeyError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except ValueError as e:
