@@ -52,7 +52,12 @@ async def get_user_info(
 ):
     try:
         user = users_repo.get_user_by_id(user_id)
-        return UserInfo(uid=user.uid_to_str(), username=user.username, email=user.email)
+        return UserInfo(uid=user.uid_to_str(), username=user.username, email=user.email, ratings=[
+            UserWineRating(
+                wine_id=rating.wine_id,
+                rating=rating.rating,
+            )
+            for rating in user.get_ratings()])
     except KeyError as e:
         raise HTTPException(status_code=404, detail=str(e))
 

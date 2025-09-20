@@ -11,6 +11,7 @@ class User:
     onboarding_completed: bool
     preferences: list
     favorites: list
+    ratings: list
 
     def __init__(self, uid: uuid.UUID, username: str, email: str):
         self.uid = uid
@@ -54,3 +55,9 @@ class User:
 
     def get_favorites(self):
         return self.favorites
+
+    def set_ratings(self, ratings: list):
+        self.ratings = ratings
+
+    def get_ratings(self):
+        return self.ratings

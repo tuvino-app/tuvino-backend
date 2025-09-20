@@ -7,7 +7,8 @@ from src.repository.base import BaseRepository, Session
 
 from src.models.wine import Wine
 from src.models.user import User
-from src.repository.table_models import User as UserModel, FavoriteWines, Wine as WineModel
+from src.models.rating import Rating
+from src.repository.table_models import User as UserModel, FavoriteWines, Wine as WineModel, WineRating as WineRatingModel
 from src.repository.preferences_repository import PreferencesRepository
 
 class UsersRepository(BaseRepository):
@@ -27,6 +28,7 @@ class UsersRepository(BaseRepository):
         user = User(uid=user.uid, username=user.name, email=user.email)
         user.add_preferences(PreferencesRepository(self.session).get_preferences(user.uid))
         user.set_favorites(self.get_favorite_wines(user))
+        user.set_ratings(self.get_ratings(user))
         return user
 
     def get_favorite_wines(self, user: User):
@@ -35,6 +37,13 @@ class UsersRepository(BaseRepository):
         for wine in favorites:
             wines.append(Wine(wine.wine_id, wine.wine_name, wine.type, wine.elaborate, wine.abv, wine.body, wine.country, wine.region, wine.winery))
         return wines
+
+    def get_ratings(self, user: User):
+        ratings = self.session.query(WineRatingModel).filter(WineRatingModel.user_id == user.uid_to_str()).all()
+        user_ratings = []
+        for rating in ratings:
+            user_ratings.append(Rating(user.uid, rating.wine_id, rating.rating))
+        return ratings
 
     def save(self, user: User):
         logging.info(f'User: {user}')
