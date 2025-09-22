@@ -9,6 +9,6 @@ class Rating:
         self.user_id = user_id
         self.wine_id = wine_id
 
-        if rating < 0 or rating > 5:
+        if rating and (rating < 0 or rating > 5):
             raise ValueError("Rating score must be between 0 and 5")
         self.rating = rating
