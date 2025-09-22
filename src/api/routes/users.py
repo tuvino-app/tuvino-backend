@@ -62,7 +62,7 @@ async def get_user_info(
         raise HTTPException(status_code=404, detail=str(e))
 
 @router.post(
-    '/{user_id}',
+    '/{user_id}/preferences',
     summary='Post user preferences',
     name='users:post-preferences',
     response_model=None,
@@ -78,7 +78,7 @@ async def update_user_preferences(
     except KeyError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-    user.add_preferences(user_preferences)
+    user.add_preferences(user_preferences.list_values())
     return users_repo.save(user)
 
 @router.post(

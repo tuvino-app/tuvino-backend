@@ -22,10 +22,12 @@ class UsersRepository(BaseRepository):
             logging.error(f'El id {user_uid} no es un UUID valido')
             raise KeyError('Formato de ID de usuario invalido')
 
-        user = self.session.query(UserModel).filter(UserModel.uid == user_uid).first()
-        if not user:
+        user_row = self.session.query(UserModel).filter(UserModel.uid == user_uid).first()
+        if not user_row:
             raise KeyError('El usuario no existe')
-        user = User(uid=user.uid, username=user.name, email=user.email)
+        user = User(uid=user_row.uid, username=user_row.name, email=user_row.email)
+        if user_row.onboarding_completed:
+            user.onboarding_completed = True
         user.add_preferences(PreferencesRepository(self.session).get_preferences(user.uid))
         user.set_favorites(self.get_favorite_wines(user))
         user.set_ratings(self.get_ratings(user))

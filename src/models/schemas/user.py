@@ -7,6 +7,9 @@ class UserPreferences(BaseSchemaModel):
     dryness: int
     abv: int
 
+    def list_values(self):
+        return [self.type, self.body, self.intensity, self.dryness, self.abv]
+
 class UserInfo(BaseSchemaModel):
     uid: str
     username: str

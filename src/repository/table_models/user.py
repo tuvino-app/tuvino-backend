@@ -1,3 +1,4 @@
+import logging
 from email.policy import default
 
 from sqlalchemy import select, Column, String, Boolean
@@ -23,7 +24,8 @@ class User(Base):
 
     def set_preferences(self, preferences: list):
         for user_preference in preferences:
-            self.preferences.append(UserPreference(user_id=self.uid, option_id=user_preference.id))
+            logging.info(f"Setting preferences for {user_preference}")
+            self.preferences.append(UserPreference(user_id=self.uid, option_id=user_preference))
         self.onboarding_completed = True
 
     def uid_to_str(self):

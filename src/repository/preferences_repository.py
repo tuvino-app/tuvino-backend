@@ -48,6 +48,7 @@ class PreferencesRepository(BaseRepository):
                 option.id,
                 option.option,
                 option.description,
+                option.value
             )
             pref.set_category(PreferenceCategory(category.id, category.name, category.description))
             user_preferences.append(pref)

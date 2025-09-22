@@ -18,6 +18,7 @@ class User:
         self.username = username
         self.email = email
         self.preferences = []
+        self.onboarding_completed = False
 
     def uid_to_str(self):
         return str(self.uid)
@@ -26,23 +27,28 @@ class User:
         if not preferences:
             raise ValueError("El usuario no tiene preferencias registradas")
         self.preferences = preferences
-        self.onboarding_completed = True
+
+    def _get_value_from_preference_category(self, selected_category: str):
+        for preference in self.preferences:
+            if preference.has_category(selected_category):
+                return preference.value
+        return None
 
     def favorite_type(self):
         types = {'Tinto': 'Red', 'Blanco': 'White', 'Rosado': 'Rose', 'Espumoso': 'Sparkling'}
         for preference in self.preferences:
-            if preference.category.category == 'types':
+            if preference.has_category('types'):
                 return types[preference.option]
         return None
 
     def favorite_body(self):
-        return 1
+        return self._get_value_from_preference_category('bodies') * 100 % 6
 
     def favorite_dryness(self):
-        return 1
+        return self._get_value_from_preference_category('dryness') * 100 % 6
 
     def favorite_abv(self):
-        return 11
+        return self._get_value_from_preference_category('abv')
 
     def rate_wine(self, wine_id, rating):
         return Rating(self.uid, wine_id, rating)
