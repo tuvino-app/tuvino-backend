@@ -21,7 +21,7 @@ class PreferencesRepository(BaseRepository):
 
         results = []
         for category, option in self.session.execute(query):
-            preference = Preference(option.id, option.option, option.description)
+            preference = Preference(option.id, option.option, option.description, option.value)
             preference.set_category(category)
             results.append(preference)
         return results
