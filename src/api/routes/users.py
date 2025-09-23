@@ -10,7 +10,7 @@ from src.repository.wine_recommendations_repository import WineRecommendationsRe
 from src.repository.ratings_repository import WineRatingsRepository
 
 from src.models.schemas.user import UserPreferences, UserInfo, UserWineRating, UserFavoriteWines
-from src.models.schemas.wine import WineFavorites
+from src.models.schemas.wine import WineFavorites, WineTasted
 from src.models.schemas.recommendations import WineRecommendations
 
 router = fastapi.APIRouter(prefix="/users", tags=["users"])
@@ -52,12 +52,7 @@ async def get_user_info(
 ):
     try:
         user = users_repo.get_user_by_id(user_id)
-        return UserInfo(uid=user.uid_to_str(), username=user.username, email=user.email, ratings=[
-            UserWineRating(
-                wine_id=rating.wine_id,
-                rating=rating.rating,
-            )
-            for rating in user.get_ratings()])
+        return UserInfo(uid=user.uid_to_str(), username=user.username, email=user.email)
     except KeyError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
@@ -81,9 +76,53 @@ async def update_user_preferences(
     user.add_preferences(user_preferences.list_values())
     return users_repo.save(user)
 
+@router.get(
+    '/{user_id}/wines/status',
+    summary='Get user rated and favorite wines',
+    name='users:get-favorites',
+    response_model=list,
+    status_code=status.HTTP_200_OK,
+)
+async def get_user_favorites(
+    user_id: str = Path(..., title="The ID of the user getting the favorites"),
+    users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository)),
+):
+    try:
+        user = users_repo.get_user_by_id(user_id)
+        logging.info(f'user ratings: {user.get_ratings()}')
+        return UserFavoriteWines(favorite_wines=[
+            WineFavorites(
+                id=wine.id,
+                name=wine.name,
+                type=wine.type,
+                elaborate=wine.elaborate,
+                abv=wine.abv,
+                body=wine.body,
+                country=wine.country,
+                region=wine.region,
+                winery=wine.winery,
+            ) for wine in user.get_favorites()],
+            tasted_wines=[
+            WineTasted(
+                id=rating.wine_id,
+                name=rating.wine.name,
+                type=rating.wine.type,
+                elaborate=rating.wine.elaborate,
+                abv=rating.wine.abv,
+                body=rating.wine.body,
+                country=rating.wine.country,
+                region=rating.wine.region,
+                winery=rating.wine.winery,
+                rating=rating.rating,
+            ) for rating in user.get_ratings()])
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 @router.post(
-    '/{user_id}/ratings',
-    summary='Post user ratings',
+    '/{user_id}/wines/status',
+    summary='Post user tasted and rated wine',
     name='users:post-ratings',
     response_model=None,
     status_code=status.HTTP_201_CREATED,
@@ -98,37 +137,6 @@ async def post_user_rating(
         user = users_repo.get_user_by_id(user_id)
         rating = user.rate_wine(user_rating.wine_id, user_rating.rating)
         return ratings_repo.save(rating)
-    except KeyError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-@router.get(
-    '/{user_id}/favorites',
-    summary='Get user favorite wines',
-    name='users:get-favorites',
-    response_model=list,
-    status_code=status.HTTP_200_OK,
-)
-async def get_user_favorites(
-    user_id: str = Path(..., title="The ID of the user getting the favorites"),
-    users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository)),
-):
-    try:
-        user = users_repo.get_user_by_id(user_id)
-        return UserFavoriteWines(wines=[
-            WineFavorites(
-                id=wine.id,
-                name=wine.name,
-                type=wine.type,
-                elaborate=wine.elaborate,
-                abv=wine.abv,
-                body=wine.body,
-                country=wine.country,
-                region=wine.region,
-                winery=wine.winery,
-            ) for wine in user.get_favorites()
-        ])
     except KeyError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except ValueError as e:

@@ -64,3 +64,15 @@ class WineFavorites(BaseSchemaModel):
     country: str
     region: str
     winery: str
+
+class WineTasted(BaseSchemaModel):
+    id: int
+    name: str
+    type: str
+    elaborate: str
+    abv: float
+    body: str
+    country: str
+    region: str
+    winery: str
+    rating: int | None

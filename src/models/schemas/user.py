@@ -14,11 +14,11 @@ class UserInfo(BaseSchemaModel):
     uid: str
     username: str
     email: str
-    ratings: list
 
 class UserWineRating(BaseSchemaModel):
-    wine_id: int
+    wine: int
     rating: int | None = None
 
 class UserFavoriteWines(BaseSchemaModel):
-    wines: list
+    favorite_wines: list
+    tasted_wines: list

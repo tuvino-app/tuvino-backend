@@ -5,7 +5,9 @@ from sqlalchemy import select
 
 from src.repository.base import BaseRepository, Session
 from src.models.rating import Rating
+from src.models.wine import Wine
 from src.repository.table_models.wine_ratings import WineRating as WineRatingModel
+from src.repository.table_models.wines import Wine as WineModel
 
 class WineRatingsRepository(BaseRepository):
     def __init__(self, session: Session):
@@ -13,11 +15,25 @@ class WineRatingsRepository(BaseRepository):
 
     def get_by_user_id_and_wine_id(self, user_id: str, wine_id: int):
         return self.session.execute(
-            select(WineRatingModel).where(
+            select(WineModel, WineRatingModel)
+            .join(WineRatingModel, WineModel.id == WineRatingModel.wine_id)
+            .where(
                 WineRatingModel.user_id == user_id,
                 WineRatingModel.wine_id == wine_id
             )
-        ).scalars().first()
+        ).first()
+
+    def get_by_user_id(self, user_id: str):
+        results = self.session.execute(
+            select(WineModel, WineRatingModel)
+            .join(WineRatingModel, WineModel.wine_id == WineRatingModel.wine_id)
+            .where(WineRatingModel.user_id == user_id)
+        ).all()
+        ratings = []
+        for wine, rating in results:
+            rated_wine = Wine(wine.wine_id, wine.wine_name, wine.type, wine.elaborate, wine.abv, wine.body, wine.country, wine.region, wine.winery)
+            ratings.append(Rating(user_id, rated_wine, rating.rating))
+        return ratings
 
     def save(self, rating: Rating):
         original_rating = self.get_by_user_id_and_wine_id(str(rating.user_id), rating.wine_id)
