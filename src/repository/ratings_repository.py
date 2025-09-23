@@ -37,8 +37,9 @@ class WineRatingsRepository(BaseRepository):
         return ratings
 
     def save(self, rating: Rating):
-        wine, original_rating = self.get_by_user_id_and_wine_id(str(rating.user_id), rating.wine.wine_id)
-        if original_rating:
+        result = self.get_by_user_id_and_wine_id(str(rating.user_id), rating.wine.wine_id)
+        if result:
+            wine, original_rating = result
             original_rating.rating = rating.rating
         else:
             self.session.add(WineRatingModel(
