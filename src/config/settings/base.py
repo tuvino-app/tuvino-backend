@@ -35,6 +35,7 @@ class BackendBaseSettings(pydantic_settings.BaseSettings):
 
     ALLOWED_ORIGINS: list[str] = [
         "http://localhost:8081",
+        "http://localhost:8000",
     ]
     ALLOWED_METHODS: list[str] = ["*"]
     ALLOWED_HEADERS: list[str] = ["*"]
