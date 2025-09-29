@@ -89,7 +89,6 @@ async def get_user_favorites(
 ):
     try:
         user = users_repo.get_user_by_id(user_id)
-        logging.info(f'user ratings: {user.get_ratings()}')
         return UserFavoriteWines(favorite_wines=[
             WineFavorites(
                 id=wine.id,
@@ -115,6 +114,34 @@ async def get_user_favorites(
                 winery=rating.wine.winery,
                 rating=rating.rating,
             ) for rating in user.get_ratings()])
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.get(
+    '/{user_id}/wines/status/{wine_id}',
+    summary='Get user rating for a selected wine',
+    name='users:get-favorites',
+    response_model=UserWineRating,
+    status_code=status.HTTP_200_OK,
+)
+async def get_user_rating(
+    user_id: str = Path(..., title="The ID of the user getting the favorites"),
+    wine_id: int = Path(..., title="The ID of the wine"),
+    users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository)),
+):
+    try:
+        user = users_repo.get_user_by_id(user_id)
+        rating = user.get_ratings(wine_id)
+        if not rating:
+            user_rating = None
+        else:
+            user_rating = rating.rating
+        return UserWineRating(
+            wine=wine_id,
+            rating=user_rating
+        )
     except KeyError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except ValueError as e:

@@ -65,5 +65,10 @@ class User:
     def set_ratings(self, ratings: list):
         self.ratings = ratings
 
-    def get_ratings(self):
+    def get_ratings(self, wine_id = None):
+        if wine_id:
+            for rating in self.ratings:
+                if rating.wine.id == wine_id:
+                    return rating
+            return None
         return self.ratings
