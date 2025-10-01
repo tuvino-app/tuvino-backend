@@ -22,11 +22,5 @@ class User(Base):
     onboarding_completed = Column(Boolean, nullable=False, default=False)
     preferences = relationship("UserPreference", back_populates="user")
 
-    def set_preferences(self, preferences: list):
-        for user_preference in preferences:
-            logging.info(f"Setting preferences for {user_preference}")
-            self.preferences.append(UserPreference(user_id=self.uid, option_id=user_preference.id))
-        self.onboarding_completed = True
-
     def uid_to_str(self):
         return str(self.uid)
