@@ -66,6 +66,9 @@ class UsersRepository(BaseRepository):
             if preference.id not in preferences:
                 logging.info(f'New preference detected: {preference.option} saving...')
                 self.session.add(UserPreferenceModel(user_id=user.uid_to_str(), option_id=preference.id))
+                if existing_user:
+                    existing_user.onboarding_completed = True
+                    self.session.add(existing_user)
 
         favorites = [favorite.id for favorite in self.get_favorite_wines(user)]
         for favorite in user.get_favorites():
