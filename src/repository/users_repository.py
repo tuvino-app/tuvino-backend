@@ -50,7 +50,7 @@ class UsersRepository(BaseRepository):
         return preferences
 
     def save(self, user: User):
-        logging.info(f'User: {user}')
+        logging.info(f'Saving user with ID {user.uid_to_str()}')
 
         existing_user = self.session.get(UserModel, user.uid_to_str())
 
