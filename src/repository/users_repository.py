@@ -7,8 +7,9 @@ from src.repository.base import BaseRepository, Session
 
 from src.models.wine import Wine
 from src.models.user import User
+from src.models.preference import Preference
 from src.models.rating import Rating
-from src.repository.table_models import User as UserModel, FavoriteWines, Wine as WineModel, WineRating as WineRatingModel
+from src.repository.table_models import User as UserModel, FavoriteWines, Wine as WineModel, WineRating as WineRatingModel, PreferenceOption as PreferenceModel, UserPreference as UserPreferenceModel
 from src.repository.preferences_repository import PreferencesRepository
 from src.repository.ratings_repository import WineRatingsRepository
 
@@ -41,24 +42,38 @@ class UsersRepository(BaseRepository):
             wines.append(Wine(wine.wine_id, wine.wine_name, wine.type, wine.elaborate, wine.abv, wine.body, wine.country, wine.region, wine.winery))
         return wines
 
+    def get_preferences(self, user: User):
+        saved_preferences = self.session.query(PreferenceModel).join(UserPreferenceModel, PreferenceModel.id == UserPreferenceModel.option_id).filter(UserPreferenceModel.user_id == user.uid_to_str()).order_by(UserPreferenceModel.id.desc()).all()
+        preferences = []
+        for pref in saved_preferences:
+            preferences.append(Preference(pref.id, pref.option, pref.description, pref.value))
+        return preferences
+
     def save(self, user: User):
-        logging.info(f'User: {user}')
+        logging.info(f'Saving user with ID {user.uid_to_str()}')
 
         existing_user = self.session.get(UserModel, user.uid_to_str())
 
         if existing_user:
             existing_user.name = user.username
             existing_user.email = user.email
-            existing_user.set_preferences(user.preferences)
         else:
             new_user = UserModel(uid=user.uid, name=user.username, email=user.email)
-            new_user.set_preferences(user.preferences)
             self.session.add(new_user)
+
+        preferences = [preference.id for preference in self.get_preferences(user)]
+        for preference in user.preferences:
+            if preference.id not in preferences:
+                logging.info(f'New preference detected: {preference.option} saving...')
+                self.session.add(UserPreferenceModel(user_id=user.uid_to_str(), option_id=preference.id))
+                if existing_user:
+                    existing_user.onboarding_completed = True
+                    self.session.add(existing_user)
 
         favorites = [favorite.id for favorite in self.get_favorite_wines(user)]
         for favorite in user.get_favorites():
             if favorite.id not in favorites:
-                logging.info(f'New favorite detected: {favorite} saving...')
+                logging.info(f'New favorite detected: {favorite.wine_id} saving...')
                 self.session.add(FavoriteWines(user_id=user.uid_to_str(), wine_id=favorite.wine_id))
 
         self.session.commit()
