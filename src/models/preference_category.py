@@ -1,9 +1,9 @@
 class PreferenceCategory:
     id: int
-    category: str
+    name: str
     description: str
 
-    def __init__(self, id: int, category: str, description: str):
+    def __init__(self, id: int, name: str, description: str):
         self.id = id
-        self.category = category
+        self.name = name
         self.description = description

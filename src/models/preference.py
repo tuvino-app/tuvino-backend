@@ -1,4 +1,5 @@
 from src.models.preference_category import PreferenceCategory
+
 class Preference:
     id: int
     category: PreferenceCategory | None
