@@ -30,7 +30,15 @@ class UsersRepository(BaseRepository):
         user = User(uid=user_row.uid, username=user_row.name, email=user_row.email)
         if user_row.onboarding_completed:
             user.onboarding_completed = True
-        user.add_preferences(PreferencesRepository(self.session).get_preferences(user.uid))
+        try:
+            user.add_preferences(PreferencesRepository(self.session).get_preferences(user.uid))
+        except Exception as e:
+            if "no tiene preferencias registradas" in str(e):
+                # Inicializar con lista vacía
+                user.preferences = []
+            else:
+                # Para otros errores, reenviar la excepción
+                raise e
         user.set_favorites(self.get_favorite_wines(user))
         user.set_ratings(WineRatingsRepository(self.session).get_by_user_id(user_id=user.uid_to_str()))
         return user

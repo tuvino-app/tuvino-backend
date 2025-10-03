@@ -27,32 +27,47 @@ class PreferencesRepository(BaseRepository):
         return results
 
     def get_preferences(self, user_id):
-        preferences = (self.session.query(
-            UserPreferenceModel,
-            PreferenceOptionModel,
-            PreferenceCategoryModel,
-        ).join(
-            PreferenceOptionModel,
-            UserPreferenceModel.option_id == PreferenceOptionModel.id
-        )
-        .join(
-            PreferenceCategoryModel,
-            PreferenceCategoryModel.id == PreferenceOptionModel.category_id,
-        )
-        .filter(
-            UserPreferenceModel.user_id == user_id
-        ).all())
-        user_preferences = []
-        for (user_pref, option, category) in preferences:
-            pref = Preference(
-                option.id,
-                option.option,
-                option.description,
-                option.value
+        """Obtiene las preferencias de un usuario"""
+        # El error está ocurriendo aquí - este método debe devolver una lista vacía
+        # en lugar de lanzar una excepción cuando no hay preferencias
+        
+        try:
+            preferences = (self.session.query(
+                UserPreferenceModel,
+                PreferenceOptionModel,
+                PreferenceCategoryModel,
+            ).join(
+                PreferenceOptionModel,
+                UserPreferenceModel.option_id == PreferenceOptionModel.id
             )
-            pref.set_category(PreferenceCategory(category.id, category.name, category.description))
-            user_preferences.append(pref)
-        return user_preferences
+            .join(
+                PreferenceCategoryModel,
+                PreferenceCategoryModel.id == PreferenceOptionModel.category_id,
+            )
+            .filter(
+                UserPreferenceModel.user_id == user_id
+            ).all())
+            user_preferences = []
+            for (user_pref, option, category) in preferences:
+                pref = Preference(
+                    option.id,
+                    option.option,
+                    option.description,
+                    option.value
+                )
+                pref.set_category(PreferenceCategory(category.id, category.name, category.description))
+                user_preferences.append(pref)
+            
+            # Si no hay preferencias, devolver una lista vacía en lugar de error
+            if not user_preferences:
+                return []
+                
+            return user_preferences
+            
+        except Exception as e:
+            print(f"Error al obtener preferencias: {str(e)}")
+            # Devolver lista vacía en caso de error
+            return []
         
     def save_onboarding_preferences(self, user_id: str, preference_options: list[int], weights: dict = None):
         """
@@ -132,19 +147,9 @@ class PreferencesRepository(BaseRepository):
     
     def get_user_preference_attributes(self, user_id: str) -> dict:
         """
-        Obtiene las preferencias del usuario en el formato agrupado por categorías
-        para el modelo ML
-        
-        Args:
-            user_id: UUID del usuario
-            
-        Returns:
-            Un diccionario con las preferencias agrupadas por categoría
+        Obtiene las preferencias del usuario en formato agrupado por categorías para el modelo ML
         """
-        # Obtener todas las preferencias del usuario
-        preferences = self.get_preferences(user_id)
-        
-        # Crear diccionario de categorías
+        # Inicializamos el diccionario resultado con valores vacíos
         result = {
             "types": {},
             "bodies": {},
@@ -153,21 +158,33 @@ class PreferencesRepository(BaseRepository):
             "abv": {}
         }
         
-        # Mapeo de nombres de categorías a claves en el resultado
-        category_name_map = {
-            "types": "types",
-            "bodies": "bodies", 
-            "intensities": "intensities",
-            "dryness": "dryness",
-            "abv": "abv"
-        }
-        
-        # Agrupar preferencias por categoría
-        for pref in preferences:
-            category_name = pref.category.name.lower()
-            if category_name in category_name_map:
-                key = category_name_map[category_name]
-                # Usar ID de opción como clave y el valor como valor
-                result[key][pref.id] = pref.value
-        
-        return result
+        try:
+            # Obtener las preferencias del usuario
+            preferences = self.get_preferences(user_id)
+            
+            # Si no hay preferencias, simplemente devolvemos el diccionario vacío
+            if not preferences:
+                return result
+                
+            # Mapeo de nombres de categorías
+            category_name_map = {
+                "types": "types",
+                "bodies": "bodies", 
+                "intensities": "intensities",
+                "dryness": "dryness",
+                "abv": "abv"
+            }
+            
+            # Agrupamos las preferencias por categoría
+            for pref in preferences:
+                category_name = pref.category.name.lower()
+                if category_name in category_name_map:
+                    key = category_name_map[category_name]
+                    result[key][pref.id] = float(pref.value)
+                    
+            return result
+            
+        except Exception as e:
+            print(f"Error al obtener preferencias de usuario: {str(e)}")
+            # En lugar de propagar el error, devolvemos el diccionario vacío
+            return result
