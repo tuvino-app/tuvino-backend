@@ -1,3 +1,4 @@
+from pydantic import EmailStr
 from src.models.schemas.base import BaseSchemaModel
 
 class UserPreferences(BaseSchemaModel):
@@ -22,3 +23,11 @@ class UserWineRating(BaseSchemaModel):
 class UserFavoriteWines(BaseSchemaModel):
     favorite_wines: list
     tasted_wines: list
+
+class UserCreate(BaseSchemaModel):
+    email: EmailStr
+    password: str
+
+class UserLogin(BaseSchemaModel):
+    email: EmailStr
+    password: str
