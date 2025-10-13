@@ -1,6 +1,7 @@
 alembic
 uwsgi
 fastapi
+email-validator
 uvicorn
 python-multipart
 pytest
