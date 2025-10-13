@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi.security import HTTPBearer
 from src.utilities.supabase_client import supabase
 from src.models.schemas.user import UserCreate, UserLogin
 
@@ -32,3 +33,23 @@ async def login(user_data: UserLogin):
         raise HTTPException(status_code=400, detail=str(e))
 
     return {"access_token": response.session.access_token, "token_type": "bearer"}
+
+
+def verify_token(token: str) -> dict:
+    """Verifica el token JWT con Supabase y devuelve los datos del usuario o lanza una excepción."""
+    try:
+        user_response = supabase.auth.get_user(token)
+
+        if user_response.user is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token inválido o expirado",
+            )
+        return user_response.user
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"No se pudo validar el token: {e}",
+        )
+
+oauth2_scheme = HTTPBearer()
