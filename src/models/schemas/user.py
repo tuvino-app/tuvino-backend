@@ -27,7 +27,13 @@ class UserFavoriteWines(BaseSchemaModel):
 class UserCreate(BaseSchemaModel):
     email: EmailStr
     password: str
+    username: str
 
 class UserLogin(BaseSchemaModel):
     email: EmailStr
     password: str
+
+class LoginResponse(BaseSchemaModel):
+    access_token: str
+    token_type: str
+    user_id: str
