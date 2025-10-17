@@ -31,7 +31,7 @@ async def register(user_data: UserCreate):
     return {"message": "Usuario registrado exitosamente."}
 
 
-@router.post("/login")
+@router.post("/login", response_model=LoginResponse)
 async def login(user_data: UserLogin):
     try:
         response = supabase.auth.sign_in_with_password({
@@ -40,13 +40,19 @@ async def login(user_data: UserLogin):
         })
         if response.session is None:
             raise HTTPException(status_code=401, detail="Credenciales inválidas.")
+            
+        user_id = response.user.id
+        user_data_response = supabase.table("users").select("onboarding_completed").eq("uid", user_id).single().execute()
+        onboarding_completed = user_data_response.data.get("onboarding_completed", False)
+            
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
     return LoginResponse(
         access_token=response.session.access_token,
         token_type="bearer",
-        user_id=response.user.id,
+        user_id=user_id,
+        onboarding_completed=onboarding_completed
     )
 
 

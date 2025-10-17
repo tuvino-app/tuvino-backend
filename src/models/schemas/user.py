@@ -37,3 +37,4 @@ class LoginResponse(BaseSchemaModel):
     access_token: str
     token_type: str
     user_id: str
+    onboarding_completed: bool

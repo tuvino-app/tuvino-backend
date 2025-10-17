@@ -2,12 +2,16 @@ import fastapi
 import logging
 
 from fastapi import status, Depends, Path, HTTPException, Query
+from fastapi.security import HTTPBearer
+
 from src.api.dependencies import get_repository
+from src.api.routes.auth import verify_token, oauth2_scheme
 from src.repository.users_repository import UsersRepository
 from src.repository.preferences_repository import PreferencesRepository
 from src.repository.wines_repository import WinesRepository
 from src.repository.wine_recommendations_repository import WineRecommendationsRepository
 from src.repository.ratings_repository import WineRatingsRepository
+from src.utilities.supabase_client import supabase
 
 from src.models.schemas.user import UserPreferences, UserInfo, UserWineRating, UserFavoriteWines
 from src.models.schemas.wine import WineFavorites, WineTasted
@@ -212,3 +216,25 @@ async def delete_user_favorite(
         raise HTTPException(status_code=404, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@router.put("/complete-onboarding")
+async def complete_onboarding(token: HTTPBearer = Depends(oauth2_scheme)):
+    try:
+        # Verificar el token y obtener el usuario
+        user = verify_token(token.credentials)
+        user_id = user.id
+        
+        # Actualizar el campo onboarding_completed a True
+        response = supabase.table("users").update(
+            {"onboarding_completed": True}
+        ).eq("uid", user_id).execute()
+        
+        if not response.data:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+            
+        return {"message": "Onboarding completado exitosamente"}
+        
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
