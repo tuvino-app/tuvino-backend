@@ -50,8 +50,8 @@ class User:
     def favorite_abv(self):
         return self._get_value_from_preference_category('abv')
 
-    def rate_wine(self, wine, rating):
-        return Rating(self.uid, wine, rating)
+    def rate_wine(self, wine, rating, review):
+        return Rating(self.uid, wine, rating, review)
 
     def add_favorite(self, wine: Wine):
         self.favorites.append(wine)

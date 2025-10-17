@@ -167,7 +167,7 @@ async def post_user_rating(
     try:
         user = users_repo.get_user_by_id(user_id)
         wine = WinesRepository().get_by_id(user_rating.wine)
-        rating = user.rate_wine(wine, user_rating.rating)
+        rating = user.rate_wine(wine, user_rating.rating, user_rating.review)
         return ratings_repo.save(rating)
     except KeyError as e:
         raise HTTPException(status_code=404, detail=str(e))

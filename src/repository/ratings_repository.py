@@ -46,6 +46,7 @@ class WineRatingsRepository(BaseRepository):
                 user_id=str(rating.user_id),
                 wine_id=rating.wine.wine_id,
                 rating=rating.rating,
+                review=rating.review
             ))
 
         return self.session.commit()
