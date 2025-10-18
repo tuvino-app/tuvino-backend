@@ -142,11 +142,14 @@ async def get_user_rating(
         rating = user.get_ratings(wine_id)
         if not rating:
             user_rating = None
+            user_review = None
         else:
             user_rating = rating.rating
+            user_review = rating.review
         return UserWineRating(
             wine=wine_id,
-            rating=user_rating
+            rating=user_rating,
+            review=user_review
         )
     except KeyError as e:
         raise HTTPException(status_code=404, detail=str(e))
