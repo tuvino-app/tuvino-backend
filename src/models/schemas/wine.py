@@ -52,6 +52,7 @@ class WineSchema(BaseSchemaModel):
     region: str
     winery: str
     vintages: str
+    summary: str | None = None
     id: Optional[uuid.UUID] = None
 
 class WineFavorites(BaseSchemaModel):

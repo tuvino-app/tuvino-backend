@@ -19,6 +19,7 @@ class UserInfo(BaseSchemaModel):
 class UserWineRating(BaseSchemaModel):
     wine: int
     rating: int | None = None
+    review: str | None = None
 
 class UserFavoriteWines(BaseSchemaModel):
     favorite_wines: list

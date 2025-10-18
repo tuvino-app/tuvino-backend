@@ -17,3 +17,4 @@ class Wine(Base):
     region = Column(String, nullable=True)
     winery = Column(String, nullable=True)
     vintages = Column(String, nullable=True)
+    summary = Column(String, nullable=True)

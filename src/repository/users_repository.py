@@ -47,7 +47,7 @@ class UsersRepository(BaseRepository):
         favorites = self.session.query(WineModel).join(FavoriteWines, WineModel.wine_id == FavoriteWines.wine_id).filter(FavoriteWines.user_id == user.uid_to_str()).order_by(FavoriteWines.added_date.desc()).all()
         wines = []
         for wine in favorites:
-            wines.append(Wine(wine.wine_id, wine.wine_name, wine.type, wine.elaborate, wine.abv, wine.body, wine.country, wine.region, wine.winery))
+            wines.append(Wine(wine.wine_id, wine.wine_name, wine.type, wine.elaborate, wine.abv, wine.body, wine.country, wine.region, wine.winery, wine.summary))
         return wines
 
     def get_preferences(self, user: User):

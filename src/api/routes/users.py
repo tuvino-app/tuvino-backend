@@ -17,6 +17,8 @@ from src.models.schemas.user import UserPreferences, UserInfo, UserWineRating, U
 from src.models.schemas.wine import WineFavorites, WineTasted
 from src.models.schemas.recommendations import WineRecommendations
 
+from src.api.tasks.summarize_task import SummarizeTask
+
 router = fastapi.APIRouter(prefix="/users", tags=["users"])
 
 @router.get(
@@ -163,12 +165,18 @@ async def post_user_rating(
     user_id: str = Path(..., title="The ID of the user posting the rating"),
     users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository)),
     ratings_repo: WineRatingsRepository = Depends(get_repository(repo_type=WineRatingsRepository)),
+    summarizer: SummarizeTask = Depends(SummarizeTask),
 ):
     try:
         user = users_repo.get_user_by_id(user_id)
         wine = WinesRepository().get_by_id(user_rating.wine)
-        rating = user.rate_wine(wine, user_rating.rating)
-        return ratings_repo.save(rating)
+        rating = user.rate_wine(wine, user_rating.rating, user_rating.review)
+        if ratings_repo.save(rating) and user_rating.review:
+            all_ratings = ratings_repo.get_by_wine_id(wine.wine_id)
+            summarizer.schedule_summary(wine.wine_id, all_ratings)
+            return
+        else:
+            raise HTTPException(status_code=500, detail='Error saving rating. Please try again later.')
     except KeyError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except ValueError as e:
