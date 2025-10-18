@@ -171,7 +171,7 @@ async def post_user_rating(
         user = users_repo.get_user_by_id(user_id)
         wine = WinesRepository().get_by_id(user_rating.wine)
         rating = user.rate_wine(wine, user_rating.rating, user_rating.review)
-        if ratings_repo.save(rating):
+        if ratings_repo.save(rating) and user_rating.review:
             all_ratings = ratings_repo.get_by_wine_id(wine.wine_id)
             summarizer.schedule_summary(wine.wine_id, all_ratings)
             return

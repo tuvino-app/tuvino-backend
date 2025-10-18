@@ -12,6 +12,7 @@ class Wine:
     region: str
     winery: str
     vintages: str
+    summary: str
 
     def __init__(self,
                  id: int,
@@ -22,7 +23,8 @@ class Wine:
                  body: str,
                  country: str,
                  region: str,
-                 winery: str):
+                 winery: str,
+                 summary: str):
         self.id = id
         self.name = name
         self.type = type
@@ -32,3 +34,4 @@ class Wine:
         self.country = country
         self.region = region
         self.winery = winery
+        self.summary = summary

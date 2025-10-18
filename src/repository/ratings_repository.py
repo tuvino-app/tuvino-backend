@@ -32,7 +32,7 @@ class WineRatingsRepository(BaseRepository):
         ).all()
         ratings = []
         for wine, rating in results:
-            rated_wine = Wine(wine.wine_id, wine.wine_name, wine.type, wine.elaborate, wine.abv, wine.body, wine.country, wine.region, wine.winery)
+            rated_wine = Wine(wine.wine_id, wine.wine_name, wine.type, wine.elaborate, wine.abv, wine.body, wine.country, wine.region, wine.winery, wine.summary)
             ratings.append(Rating(user_id, rated_wine, rating.rating, rating.review))
         return ratings
 
@@ -45,7 +45,7 @@ class WineRatingsRepository(BaseRepository):
         ).all()
         ratings = []
         for wine, rating in results:
-            rated_wine = Wine(wine.wine_id, wine.wine_name, wine.type, wine.elaborate, wine.abv, wine.body, wine.country, wine.region, wine.winery)
+            rated_wine = Wine(wine.wine_id, wine.wine_name, wine.type, wine.elaborate, wine.abv, wine.body, wine.country, wine.region, wine.winery, wine.summary)
             ratings.append(Rating(rating.user_id, rated_wine, rating.rating, rating.review))
         return ratings
 
