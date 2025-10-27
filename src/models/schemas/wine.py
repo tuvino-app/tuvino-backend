@@ -54,6 +54,13 @@ class WineSchema(BaseSchemaModel):
     vintages: str
     summary: str | None = None
     id: Optional[uuid.UUID] = None
+    score: float | None = None
+    harmonize_es: str | None = None
+
+    def add_score(self, score: float):
+        if score < 0.0 or score > 1.0:
+            raise ValueError("Score must be a probability")
+        self.score = round(score, 3)
 
 class WineFavorites(BaseSchemaModel):
     id: int
