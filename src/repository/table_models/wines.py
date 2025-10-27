@@ -18,3 +18,4 @@ class Wine(Base):
     winery = Column(String, nullable=True)
     vintages = Column(String, nullable=True)
     summary = Column(String, nullable=True)
+    harmonize_es = Column(String, nullable=True)
