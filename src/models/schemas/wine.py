@@ -55,6 +55,7 @@ class WineSchema(BaseSchemaModel):
     summary: str | None = None
     id: Optional[uuid.UUID] = None
     score: float | None = None
+    harmonize_es: str | None = None
 
     def add_score(self, score: float):
         if score < 0.0 or score > 1.0:
