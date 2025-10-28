@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import HTTPBearer
 from src.utilities.supabase_client import supabase
-from src.models.schemas.user import UserCreate, UserLogin, LoginResponse
+from src.models.schemas.user import UserCreate, UserLogin, LoginResponse, RefreshResponse, RefreshRequest
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -50,10 +50,29 @@ async def login(user_data: UserLogin):
 
     return LoginResponse(
         access_token=response.session.access_token,
+        refresh_token=response.session.refresh_token,
         token_type="bearer",
         user_id=user_id,
         onboarding_completed=onboarding_completed
     )
+
+@router.post("/refresh", response_model=RefreshResponse)
+def refresh_token(refresh_data: RefreshRequest):
+    if not refresh_data.refresh_token:
+        raise HTTPException(status_code=400, detail="No se proporcionó refresh_token")
+
+    try:
+        response = supabase.auth.refresh_session(refresh_data.refresh_token)
+
+        if response.session is None:
+            raise HTTPException(status_code=401, detail="Refresh token inválido o expirado")
+
+        return {
+            "access_token": response.session.access_token,
+            "refresh_token": response.session.refresh_token,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=str(e))
 
 
 def verify_token(token: str) -> dict:

@@ -39,3 +39,12 @@ class LoginResponse(BaseSchemaModel):
     token_type: str
     user_id: str
     onboarding_completed: bool
+    refresh_token: str
+
+class RefreshRequest(BaseSchemaModel):
+    refresh_token: str
+
+class RefreshResponse(BaseSchemaModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
