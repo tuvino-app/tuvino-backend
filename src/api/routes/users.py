@@ -141,13 +141,16 @@ async def get_user_rating(
         user = users_repo.get_user_by_id(user_id)
         rating = user.get_ratings(wine_id)
         if not rating:
+            tasted = False
             user_rating = None
             user_review = None
         else:
+            tasted = True
             user_rating = rating.rating
             user_review = rating.review
         return UserWineRating(
             wine=wine_id,
+            tasted=tasted,
             rating=user_rating,
             review=user_review
         )
