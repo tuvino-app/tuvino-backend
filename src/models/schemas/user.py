@@ -19,6 +19,7 @@ class UserInfo(BaseSchemaModel):
 class UserWineRating(BaseSchemaModel):
     wine: int
     tasted: bool = False
+    is_favorite: bool = False
     rating: int | None = None
     review: str | None = None
 

@@ -151,6 +151,7 @@ async def get_user_rating(
         return UserWineRating(
             wine=wine_id,
             tasted=tasted,
+            is_favorite=wine_id in [f.id for f in user.get_favorites()],
             rating=user_rating,
             review=user_review
         )
