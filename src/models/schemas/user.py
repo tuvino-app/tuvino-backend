@@ -16,6 +16,7 @@ class UserInfo(BaseSchemaModel):
     uid: str
     username: str
     email: str
+    onboarding_completed: bool
 
 class UserWineRating(BaseSchemaModel):
     wine: int

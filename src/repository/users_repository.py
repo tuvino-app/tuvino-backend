@@ -28,8 +28,7 @@ class UsersRepository(BaseRepository):
         if not user_row:
             raise KeyError('El usuario no existe')
         user = User(uid=user_row.uid, username=user_row.name, email=user_row.email)
-        if user_row.onboarding_completed:
-            user.onboarding_completed = True
+        user.onboarding_completed = user_row.onboarding_completed
         try:
             user.add_preferences(PreferencesRepository(self.session).get_preferences(user.uid))
         except Exception as e:
