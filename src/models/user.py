@@ -32,7 +32,7 @@ class User:
         for preference in self.preferences:
             if preference.has_category(selected_category):
                 return preference.value
-        return None
+        return 0
 
     def favorite_type(self):
         types = {'Tinto': 'Red', 'Blanco': 'White', 'Rosado': 'Rose', 'Espumoso': 'Sparkling'}
@@ -48,7 +48,7 @@ class User:
         return self._get_value_from_preference_category('dryness') * 100 % 6
 
     def favorite_abv(self):
-        return self._get_value_from_preference_category('abv')
+        return self._get_value_from_preference_category('abv') or 0
 
     def rate_wine(self, wine, rating, review):
         return Rating(self.uid, wine, rating, review)
