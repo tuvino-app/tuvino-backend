@@ -10,20 +10,11 @@ async def register(user_data: UserCreate):
     try:
         response = supabase.auth.sign_up({
             "email": user_data.email,
-            "password": user_data.password,
-            "options": {
-                "data": {
-                    "username": user_data.username
-                }
-            }
+            "password": user_data.password
         })
         
         if response.user is None and response.session is None:
             raise HTTPException(status_code=400, detail="No se pudo registrar al usuario.")
-        try:
-            supabase.table("users").update({"name": user_data.username}).eq("uid", response.user.id).execute()
-        except Exception as db_error:
-            print(f"Error al actualizar username: {db_error}")
             
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error en el registro: {str(e)}")

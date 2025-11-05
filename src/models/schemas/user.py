@@ -2,6 +2,7 @@ from pydantic import EmailStr
 from src.models.schemas.base import BaseSchemaModel
 
 class UserPreferences(BaseSchemaModel):
+    name: str
     type: int
     body: int
     intensity: int
@@ -30,7 +31,6 @@ class UserFavoriteWines(BaseSchemaModel):
 class UserCreate(BaseSchemaModel):
     email: EmailStr
     password: str
-    username: str
 
 class UserLogin(BaseSchemaModel):
     email: EmailStr

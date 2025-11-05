@@ -78,7 +78,7 @@ async def update_user_preferences(
         user = users_repo.get_user_by_id(user_id)
     except KeyError as e:
         raise HTTPException(status_code=404, detail=str(e))
-
+    user.name = user_preferences.name
     user.add_preferences(user_preferences.list_values())
     return users_repo.save(user)
 

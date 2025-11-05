@@ -71,9 +71,10 @@ class UsersRepository(BaseRepository):
 
         preferences = [preference.id for preference in self.get_preferences(user)]
         for preference in user.preferences:
-            if preference.id not in preferences:
-                logging.info(f'New preference detected: {preference.option} saving...')
-                self.session.add(UserPreferenceModel(user_id=user.uid_to_str(), option_id=preference.id))
+            preference_id = preference if isinstance(preference, int) else preference.id
+            if preference_id not in preferences:
+                logging.info(f'New preference detected: {preference_id} saving...')
+                self.session.add(UserPreferenceModel(user_id=user.uid_to_str(), option_id=preference_id))
                 if existing_user:
                     existing_user.onboarding_completed = True
                     self.session.add(existing_user)
