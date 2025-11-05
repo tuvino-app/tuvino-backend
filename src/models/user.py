@@ -31,7 +31,7 @@ class User:
     def _get_value_from_preference_category(self, selected_category: str):
         for preference in self.preferences:
             if preference.has_category(selected_category):
-                return preference.value
+                return 0 if preference.value else preference.value
         return 0
 
     def favorite_type(self):
