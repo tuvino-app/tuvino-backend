@@ -33,8 +33,9 @@ async def login(user_data: UserLogin):
             raise HTTPException(status_code=401, detail="Credenciales inválidas.")
             
         user_id = response.user.id
-        user_data_response = supabase.table("users").select("onboarding_completed").eq("uid", user_id).single().execute()
+        user_data_response = supabase.table("users").select("onboarding_completed, name").eq("uid", user_id).single().execute()
         onboarding_completed = user_data_response.data.get("onboarding_completed", False)
+        user_name = user_data_response.data.get("name", "")
             
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -44,6 +45,7 @@ async def login(user_data: UserLogin):
         refresh_token=response.session.refresh_token,
         token_type="bearer",
         user_id=user_id,
+        user_name=user_name,
         onboarding_completed=onboarding_completed
     )
 
