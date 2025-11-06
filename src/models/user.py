@@ -31,11 +31,11 @@ class User:
     def _get_value_from_preference_category(self, selected_category: str):
         for preference in self.preferences:
             if preference.has_category(selected_category):
-                return 0 if preference.value is None else preference.value
-        return 0
+                return 1 if preference.value is None else preference.value
+        return 1
 
     def favorite_type(self):
-        types = {'Tinto': 'Red', 'Blanco': 'White', 'Rosado': 'Rose', 'Espumoso': 'Sparkling'}
+        types = {'Tinto': 'Red', 'Blanco': 'White', 'Rosado': 'Rose', 'Espumoso': 'Sparkling', 'No sabe/no contesta': 'Red'}
         for preference in self.preferences:
             if preference.has_category('types'):
                 return types[preference.option]
