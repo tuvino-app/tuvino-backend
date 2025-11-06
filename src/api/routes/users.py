@@ -31,13 +31,24 @@ router = fastapi.APIRouter(prefix="/users", tags=["users"])
 async def get_wine_recommendations(
     user_id: str = Query(..., description="ID of the user to get recommendations for"),
     limit: int = Query(3, description="Maximum number of recommendations to return", ge=1, le=20),
+    wine_type: str = Query(None, description="Type of wine to filter recommendations (e.g. tinto, blanco, rosado)"),
+    body: str = Query(None, description="Body of wine to filter recommendations (e.g. ligero, medio, robusto)"),
+    dryness: str = Query(None, description="Dryness of wine to filter recommendations (e.g. seco, semi-seco, dulce)"),
+    abv: float = Query(None, description="Alcohol by volume to filter recommendations"),
     users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository)),
     preferences_repo: PreferencesRepository = Depends(get_repository(repo_type=PreferencesRepository)),
 ):
     try:
         recommendations_repo = WineRecommendationsRepository()
         user = users_repo.get_user_by_id(user_id)
-        recommended_wines = recommendations_repo.get_recommendations(user, limit)
+        recommended_wines = recommendations_repo.get_recommendations(
+            user,
+            limit,
+            wine_type=wine_type,
+            body=body,
+            dryness=dryness,
+            abv=abv
+        )
         return WineRecommendations(
             user_id=user_id,
             recommendations=recommended_wines
