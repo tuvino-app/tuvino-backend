@@ -10,5 +10,5 @@ class PreferenceCategory(Base):
         nullable=False,
         autoincrement=True,
     )
-    name = Column(String, nullable=False)
+    name = Column(String, nullable=False, unique=True)
     description = Column(String, nullable=True)

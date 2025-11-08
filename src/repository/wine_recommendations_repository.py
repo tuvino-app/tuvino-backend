@@ -41,8 +41,9 @@ class WineRecommendationsRepository:
             }
             body_json = json.dumps(payload)
             logging.info(f'Payload enviado al modelo de recomendaciones: {body_json}')
+            logging.info(f'Llamando a la API de recomendaciones en {self.model_api_url}')
 
-            response = requests.post(f'{self.model_api_url}', body_json, headers={'Content-Type': 'application/json'})
+            response = requests.post(f'{self.model_api_url}/wines', body_json, headers={'Content-Type': 'application/json'})
             logging.info(f'Llamada al modelo con parametros {body_json} devuelve: {response.text}')
 
             if response.status_code != self.OK_STATUS_CODE:

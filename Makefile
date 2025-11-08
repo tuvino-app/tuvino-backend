@@ -34,3 +34,17 @@ ifdef VERSION
 else
 	$(error ERROR: Especifique una version a la que retroceder")
 endif
+
+seed-preferences:
+	docker exec -i db psql -U tuvino_user -d db < scripts/seed_preferences.sql
+
+clean:
+	docker compose -f compose.dev.yaml down -v
+	docker volume rm tuvino-backend_postgresql_db_data || true
+	docker system prune -f
+
+fresh-start: clean docker-compose-up
+	@echo "Waiting for services to be ready..."
+	sleep 10
+	make upgrade
+	make seed-preferences

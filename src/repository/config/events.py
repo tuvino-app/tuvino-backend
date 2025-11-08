@@ -27,7 +27,7 @@ def inspect_db_server_on_close(
 def initialize_db_tables(connection: Connection) -> None:
     logging.info("Database Table Creation --- Initializing . . .")
 
-    Base.metadata.drop_all(connection)
+    # Only create tables, don't drop them (preserves data)
     Base.metadata.create_all(connection)
 
     logging.info("Database Table Creation --- Successfully Initialized!")

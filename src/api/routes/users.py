@@ -1,5 +1,7 @@
 import fastapi
 import logging
+from datetime import datetime, timedelta
+from typing import Optional
 
 from fastapi import status, Depends, Path, HTTPException, Query
 from fastapi.security import HTTPBearer
@@ -21,6 +23,10 @@ from src.api.tasks.summarize_task import SummarizeTask
 
 router = fastapi.APIRouter(prefix="/users", tags=["users"])
 
+# Cache for recommendations: {user_id: (recommendations, timestamp)}
+_recommendations_cache = {}
+CACHE_EXPIRY_MINUTES = 30  # Cache recommendations for 30 minutes
+
 @router.get(
     '/recommendations',
     summary='Get wine recommendations for a specific user',
@@ -35,10 +41,28 @@ async def get_wine_recommendations(
     body: str = Query(None, description="Body of wine to filter recommendations (e.g. ligero, medio, robusto)"),
     dryness: str = Query(None, description="Dryness of wine to filter recommendations (e.g. seco, semi-seco, dulce)"),
     abv: float = Query(None, description="Alcohol by volume to filter recommendations"),
+    use_cache: bool = Query(True, description="Whether to use cached recommendations if available"),
     users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository)),
     preferences_repo: PreferencesRepository = Depends(get_repository(repo_type=PreferencesRepository)),
 ):
     try:
+        # Create cache key based on user_id and filters
+        cache_key = f"{user_id}_{limit}_{wine_type}_{body}_{dryness}_{abv}"
+        
+        # Check if we have cached recommendations
+        if use_cache and cache_key in _recommendations_cache:
+            cached_data, timestamp = _recommendations_cache[cache_key]
+            
+            # Check if cache is still valid
+            if datetime.now() - timestamp < timedelta(minutes=CACHE_EXPIRY_MINUTES):
+                logging.info(f"Returning cached recommendations for user {user_id}")
+                return cached_data
+            else:
+                # Cache expired, remove it
+                logging.info(f"Cache expired for user {user_id}, fetching new recommendations")
+                del _recommendations_cache[cache_key]
+        
+        # Get fresh recommendations
         recommendations_repo = WineRecommendationsRepository()
         user = users_repo.get_user_by_id(user_id)
         recommended_wines = recommendations_repo.get_recommendations(
@@ -49,10 +73,17 @@ async def get_wine_recommendations(
             dryness=dryness,
             abv=abv
         )
-        return WineRecommendations(
+        
+        result = WineRecommendations(
             user_id=user_id,
             recommendations=recommended_wines
         )
+        
+        # Cache the result
+        _recommendations_cache[cache_key] = (result, datetime.now())
+        logging.info(f"Cached recommendations for user {user_id}")
+        
+        return result
     except KeyError as e:
         raise HTTPException(status_code=500, detail=str(e))
 

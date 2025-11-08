@@ -22,9 +22,8 @@ services:
       - POSTGRES_USER=${POSTGRES_USERNAME}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
-      - PGDATA=/var/lib/postgresql/data/
     volumes:
-      - postgresql_db_data:/var/lib/postgresql/data/
+      - postgresql_db_data:/var/lib/postgresql/data
     ports:
       - "5433:5432"
     healthcheck:

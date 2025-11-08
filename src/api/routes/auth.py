@@ -2,28 +2,52 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import HTTPBearer
 from src.utilities.supabase_client import supabase
 from src.models.schemas.user import UserCreate, UserLogin, LoginResponse, RefreshResponse, RefreshRequest
+from src.repository.users_repository import UsersRepository
+from src.api.dependencies import get_repository
+from src.repository.table_models import User as UserModel
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post("/register")
-async def register(user_data: UserCreate):
+async def register(
+    user_data: UserCreate,
+    users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository))
+):
     try:
+        # Register with Supabase
         response = supabase.auth.sign_up({
             "email": user_data.email,
             "password": user_data.password
         })
         
-        if response.user is None and response.session is None:
+        if response.user is None:
             raise HTTPException(status_code=400, detail="No se pudo registrar al usuario.")
+        
+        # Create user in PostgreSQL database
+        new_user = UserModel(
+            uid=response.user.id,
+            email=user_data.email,
+            name=user_data.email.split('@')[0],  # Use email username as default name
+            onboarding_completed=False
+        )
+        users_repo.session.add(new_user)
+        users_repo.session.commit()
             
     except Exception as e:
+        users_repo.session.rollback()
         raise HTTPException(status_code=400, detail=f"Error en el registro: {str(e)}")
 
-    return {"message": "Usuario registrado exitosamente."}
+    return {
+        "message": "Usuario registrado exitosamente.",
+        "user_id": response.user.id
+    }
 
 
 @router.post("/login", response_model=LoginResponse)
-async def login(user_data: UserLogin):
+async def login(
+    user_data: UserLogin,
+    users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository))
+):
     try:
         response = supabase.auth.sign_in_with_password({
             "email": user_data.email,
@@ -33,9 +57,14 @@ async def login(user_data: UserLogin):
             raise HTTPException(status_code=401, detail="Credenciales inválidas.")
             
         user_id = response.user.id
-        user_data_response = supabase.table("users").select("onboarding_completed, name").eq("uid", user_id).single().execute()
-        onboarding_completed = user_data_response.data.get("onboarding_completed", False)
-        user_name = user_data_response.data.get("name", "")
+        
+        # Get user data from PostgreSQL instead of Supabase
+        user_row = users_repo.session.query(UserModel).filter(UserModel.uid == user_id).first()
+        if not user_row:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado en la base de datos.")
+        
+        onboarding_completed = user_row.onboarding_completed
+        user_name = user_row.name
             
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

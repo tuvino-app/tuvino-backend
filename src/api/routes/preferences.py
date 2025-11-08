@@ -6,6 +6,7 @@ from src.api.dependencies import get_repository
 from src.repository.preferences_repository import PreferencesRepository
 from src.repository.users_repository import UsersRepository
 from src.models.schemas.preference import OnboardingPreferences, CategoryPreferences, UserPreferencesResponse, PreferenceAttributes
+from src.repository.table_models import User as UserModel
 
 router = fastapi.APIRouter(prefix="/preferences", tags=["preferences"])
 
@@ -34,32 +35,6 @@ async def get_preference_options(
         } for option in options
     ]
 
-@router.get(
-    "/users/{user_id}",
-    summary="Get user preferences",
-    response_model=UserPreferencesResponse,
-    status_code=status.HTTP_200_OK,
-)
-async def get_user_preferences(
-    user_id: str = Path(..., title="ID del usuario"),
-    preferences_repo: PreferencesRepository = Depends(get_repository(repo_type=PreferencesRepository)),
-    users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository)),
-):
-    """Obtener las preferencias de un usuario específico"""
-    try:
-        # Verificar que el usuario existe
-        users_repo.get_user_by_id(user_id)
-        
-        # Obtener preferencias en formato agrupado (como el modelo espera)
-        preference_attributes = preferences_repo.get_user_preference_attributes(user_id)
-        
-        return UserPreferencesResponse(
-            user_id=user_id,
-            preferences=PreferenceAttributes(**preference_attributes)
-        )
-    except KeyError as e:
-        raise HTTPException(status_code=404, detail=f"Usuario no encontrado: {str(e)}")
-
 @router.post(
     "/users/{user_id}/onboarding",
     summary="Save all user preferences during onboarding",
@@ -74,17 +49,26 @@ async def save_onboarding_preferences(
     """Guardar todas las preferencias del usuario durante el proceso de onboarding"""
     try:
         # Verificar que el usuario existe
-        users_repo.get_user_by_id(user_id)
+        user = users_repo.get_user_by_id(user_id)
         
+        # Save preferences
         result = preferences_repo.save_onboarding_preferences(
             user_id=user_id,
             preference_options=preferences.option_ids,
             weights=preferences.weights
         )
-        return {"success": result}
+        
+        # Mark onboarding as completed
+        user_row = users_repo.session.query(UserModel).filter(UserModel.uid == user_id).first()
+        if user_row:
+            user_row.onboarding_completed = True
+            users_repo.session.commit()
+        
+        return {"success": result, "onboarding_completed": True}
     except KeyError as e:
         raise HTTPException(status_code=404, detail=f"Usuario no encontrado: {str(e)}")
     except Exception as e:
+        users_repo.session.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.put(
@@ -133,6 +117,33 @@ async def get_user_preference_attributes(
         users_repo.get_user_by_id(user_id)
         
         # Obtener preferencias en formato agrupado
+        preference_attributes = preferences_repo.get_user_preference_attributes(user_id)
+        
+        return UserPreferencesResponse(
+            user_id=user_id,
+            preferences=PreferenceAttributes(**preference_attributes)
+        )
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=f"Usuario no encontrado: {str(e)}")
+    
+
+@router.get(
+    "/users/{user_id}",
+    summary="Get user preferences",
+    response_model=UserPreferencesResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_user_preferences(
+    user_id: str = Path(..., title="ID del usuario"),
+    preferences_repo: PreferencesRepository = Depends(get_repository(repo_type=PreferencesRepository)),
+    users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository)),
+):
+    """Obtener las preferencias de un usuario específico"""
+    try:
+        # Verificar que el usuario existe
+        users_repo.get_user_by_id(user_id)
+        
+        # Obtener preferencias en formato agrupado (como el modelo espera)
         preference_attributes = preferences_repo.get_user_preference_attributes(user_id)
         
         return UserPreferencesResponse(
