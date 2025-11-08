@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 
 from src.api.endpoints import router as api_endpoint_router
 from src.api.endpoints import public_router
+from src.api.routes import menu
 from src.config.manager import settings
 from src.config.events import execute_backend_server_event_handler, terminate_backend_server_event_handler
 from src.api.routes.auth import verify_token
@@ -108,6 +109,7 @@ def initialize_app() -> fastapi.FastAPI:
 
     fastapi_app.include_router(router=public_router, prefix=settings.API_PREFIX)
     fastapi_app.include_router(router=api_endpoint_router, prefix=settings.API_PREFIX)
+    fastapi_app.include_router(router=menu.router, prefix=settings.API_PREFIX)
 
     return fastapi_app
 

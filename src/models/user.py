@@ -1,6 +1,5 @@
 import uuid
 import logging
-from src.models.preference import Preference
 from src.models.rating import Rating
 from src.models.wine import Wine
 
