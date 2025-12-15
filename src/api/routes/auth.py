@@ -13,8 +13,10 @@ async def register(
     user_data: UserCreate,
     users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository))
 ):
+    supabase_user_id = None
+    
     try:
-        # Register with Supabase
+        # Register with Supabase Auth
         response = supabase.auth.sign_up({
             "email": user_data.email,
             "password": user_data.password
@@ -23,23 +25,39 @@ async def register(
         if response.user is None:
             raise HTTPException(status_code=400, detail="No se pudo registrar al usuario.")
         
-        # Create user in PostgreSQL database
-        new_user = UserModel(
-            uid=response.user.id,
-            email=user_data.email,
-            name=user_data.email.split('@')[0],  # Use email username as default name
-            onboarding_completed=False
-        )
-        users_repo.session.add(new_user)
-        users_repo.session.commit()
+        supabase_user_id = response.user.id
+        
+    except Exception as e:
+        error_msg = str(e)
+        # Supabase throws exception when user already exists in Auth
+        if "User already registered" in error_msg or "already been registered" in error_msg:
+            raise HTTPException(status_code=400, detail="El usuario ya está registrado.")
+        raise HTTPException(status_code=400, detail=f"Error en Supabase Auth: {error_msg}")
+    
+    # Now insert into PostgreSQL users table
+    try:
+        # Check if user already exists in PostgreSQL
+        existing_user = users_repo.session.query(UserModel).filter(
+            UserModel.uid == supabase_user_id
+        ).first()
+        
+        if not existing_user:
+            new_user = UserModel(
+                uid=supabase_user_id,
+                email=user_data.email,
+                name=user_data.email.split('@')[0],
+                onboarding_completed=False
+            )
+            users_repo.session.add(new_user)
+            users_repo.session.commit()
             
     except Exception as e:
         users_repo.session.rollback()
-        raise HTTPException(status_code=400, detail=f"Error en el registro: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Error al guardar usuario: {str(e)}")
 
     return {
         "message": "Usuario registrado exitosamente.",
-        "user_id": response.user.id
+        "user_id": supabase_user_id
     }
 
 
