@@ -16,8 +16,9 @@ class WinesRepository:
         return WineSchema(**response.data)
 
     @staticmethod
-    def get_by_filters(filters: WineFilters) -> list[Any] | list[WineSchema]:
-        query = supabase.table(WinesRepository.table_name).select("*")
+    def get_by_filters(filters: WineFilters, limit: int = None, offset: int = None) -> tuple[list[WineSchema], int] | list[WineSchema]:
+        # Build base query for filtering
+        query = supabase.table(WinesRepository.table_name).select("*", count="exact")
 
         text_filters = {
             'wine_name': filters.wine_name,
@@ -36,14 +37,27 @@ class WinesRepository:
         if filters.max_abv is not None:
             query = query.lte("abv", filters.max_abv)
 
+        # Add ordering - prioritize exact matches first, then alphabetical
+        query = query.order("wine_name", desc=False)
+
+        # Apply pagination if limit and offset are provided
+        if limit is not None and offset is not None:
+            query = query.range(offset, offset + limit - 1)
+
         response = query.execute()
 
         if not getattr(response, "data", None):
-            return []
+            total_count = getattr(response, "count", 0) or 0
+            return ([], total_count) if limit is not None else []
 
         wines = [WineSchema(**item) for item in response.data]
+        total_count = getattr(response, "count", 0) or 0
 
-        # Ordenar por relevancia si hay búsqueda por nombre
+        # If pagination is used, return tuple with count
+        if limit is not None:
+            return wines, total_count
+
+        # Legacy behavior: sort in memory if no pagination and wine_name filter exists
         if filters.wine_name:
             search_term = filters.wine_name.lower()
             wines.sort(key=lambda w: (

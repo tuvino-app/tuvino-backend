@@ -1,7 +1,8 @@
 import fastapi
 import logging
+import math
 from fastapi import status, HTTPException, Path, Query
-from src.models.schemas.wine import WineSchema, WineFilters
+from src.models.schemas.wine import WineSchema, WineFilters, PaginatedWineResponse
 from src.repository.wines_repository import WinesRepository
 
 router = fastapi.APIRouter(prefix="/wines", tags=["wines"])
@@ -9,8 +10,8 @@ repo = WinesRepository()
 
 @router.get(
     "/search",
-    summary="Get wines by wine_name",
-    response_model=list[WineSchema],
+    summary="Get wines by filters with pagination",
+    response_model=PaginatedWineResponse,
     status_code=status.HTTP_200_OK,
 )
 async def get_wine_by_name(wine_name: str = Query(None, description="Wine name"),
@@ -19,7 +20,9 @@ async def get_wine_by_name(wine_name: str = Query(None, description="Wine name")
                            country: str = Query(None, description="Region of origin"),
                            region: str = Query(None, description="Region of origin"),
                            min_abv: float = Query(None, description="Minimum ABV"),
-                           max_abv: float = Query(None, description="Maximum ABV")):
+                           max_abv: float = Query(None, description="Maximum ABV"),
+                           page: int = Query(1, ge=1, description="Page number (starting from 1)"),
+                           page_size: int = Query(20, ge=1, le=100, description="Number of items per page")):
     try:
         filters = WineFilters(
             wine_name=wine_name,
@@ -31,15 +34,26 @@ async def get_wine_by_name(wine_name: str = Query(None, description="Wine name")
             max_abv=max_abv
         )
 
-        wines = repo.get_by_filters(filters)
+        # Calculate offset from page number
+        offset = (page - 1) * page_size
 
-        if not wines:
-            raise HTTPException(
-                status_code=404,
-                detail="No wines found matching the criteria"
-            )
+        # Get paginated wines and total count
+        wines, total = repo.get_by_filters(filters, limit=page_size, offset=offset)
 
-        return wines
+        # Calculate pagination metadata
+        total_pages = math.ceil(total / page_size) if total > 0 else 0
+        has_next = page < total_pages
+        has_previous = page > 1
+
+        return PaginatedWineResponse(
+            items=wines,
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+            has_next=has_next,
+            has_previous=has_previous
+        )
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
