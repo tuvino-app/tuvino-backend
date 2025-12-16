@@ -17,8 +17,8 @@ class WinesRepository:
 
     @staticmethod
     def get_by_filters(filters: WineFilters, limit: int = None, offset: int = None) -> tuple[list[WineSchema], int] | list[WineSchema]:
-        # Build base query for filtering
-        query = supabase.table(WinesRepository.table_name).select("*", count="exact")
+        # Build base query for filtering (removed count='exact' for performance)
+        query = supabase.table(WinesRepository.table_name).select("*")
 
         text_filters = {
             'wine_name': filters.wine_name,
@@ -41,21 +41,32 @@ class WinesRepository:
         query = query.order("wine_name", desc=False)
 
         # Apply pagination if limit and offset are provided
+        # Query one extra row to determine if there are more results
         if limit is not None and offset is not None:
-            query = query.range(offset, offset + limit - 1)
+            query = query.range(offset, offset + limit)  # Request limit + 1 rows
 
         response = query.execute()
 
         if not getattr(response, "data", None):
-            total_count = getattr(response, "count", 0) or 0
-            return ([], total_count) if limit is not None else []
+            # Return empty results with has_more flag
+            return ([], 0) if limit is not None else []
 
         wines = [WineSchema(**item) for item in response.data]
-        total_count = getattr(response, "count", 0) or 0
 
-        # If pagination is used, return tuple with count
+        # If pagination is used, return tuple with approximate count
         if limit is not None:
-            return wines, total_count
+            # Check if we got more results than requested (means there's a next page)
+            has_more = len(wines) > limit
+
+            # Remove the extra row if we got it
+            if has_more:
+                wines = wines[:limit]
+
+            # Estimate total: we know there are at least offset + len(wines) rows
+            # If has_more is True, add at least 'limit' more to the estimate
+            estimated_total = offset + len(wines) + (limit if has_more else 0)
+
+            return wines, estimated_total
 
         # Legacy behavior: sort in memory if no pagination and wine_name filter exists
         if filters.wine_name:
