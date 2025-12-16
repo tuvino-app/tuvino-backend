@@ -38,6 +38,8 @@ class WineRecommendationsRepository:
         
         # Get user's ratings - they already have wine details attached
         user_ratings = user.get_ratings()
+
+        logging.info(f'User ratings: {user_ratings}')
         
         # Build rating data with wine attributes
         ratings_data = []
