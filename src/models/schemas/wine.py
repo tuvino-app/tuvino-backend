@@ -59,15 +59,17 @@ class WineSchema(BaseSchemaModel):
 
     def add_score(self, score: float):
         """
-        Add predicted rating score to wine.
-        
-        Note: With the dot product model, scores are now predicted ratings in [1, 5] range,
-        not similarity scores in [0, 1] range. This matches the model's output transformation:
-        sigmoid(dot_product) * 4 + 1
+        Add compatibility score to wine.
+
+        The backend transforms dot products from the Cloud Run service into
+        compatibility scores using: sigmoid(dot_product) * 100
+
+        This gives a percentage-like score in [0, 100] range representing
+        how well the wine matches the user's preferences.
         """
-        if score < 1.0 or score > 5.0:
-            raise ValueError("Score must be a predicted rating between 1.0 and 5.0")
-        self.score = round(score, 2)  # 2 decimals sufficient for ratings
+        if score < 0.0 or score > 100.0:
+            raise ValueError("Score must be a compatibility score between 0.0 and 100.0")
+        self.score = round(score, 2)  # 2 decimals sufficient for percentage scores
 
 class WineFavorites(BaseSchemaModel):
     id: int

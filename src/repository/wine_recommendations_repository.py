@@ -2,6 +2,7 @@ import os
 import logging
 from fastapi.exceptions import HTTPException
 import json
+import math
 from src.repository.wines_repository import WinesRepository
 from src.services.user_features_service import UserFeaturesService
 
@@ -10,6 +11,22 @@ import requests
 from src.models.user import User
 
 class WineRecommendationsRepository:
+    @staticmethod
+    def _transform_dot_product_to_score(dot_product: float) -> float:
+        """
+        Transform raw dot product from Cloud Run to compatibility score [0, 100].
+
+        Formula: sigmoid(dot_product) * 100
+
+        Args:
+            dot_product: Raw dot product value from the model
+
+        Returns:
+            Compatibility score in range [0, 100]
+        """
+        sigmoid_value = 1 / (1 + math.exp(-dot_product))
+        compatibility_score = sigmoid_value * 100
+        return round(compatibility_score, 2)
     def __init__(self):
         self.OK_STATUS_CODE = 200
         self.model_api_url = os.getenv('RECOMMENDATIONS_API_URL')
@@ -95,7 +112,7 @@ class WineRecommendationsRepository:
         # Step 4: Process response
         try:
             parsed_response_json = response.json()
-            scores_data = parsed_response_json.get('scores', {})
+            dot_products_data = parsed_response_json.get('dot_products', {})
             wine_ids = parsed_response_json.get('wines', [])
         except json.JSONDecodeError as e:
             logging.error(f'Error al decodificar la respuesta JSON del modelo: {e}')
@@ -105,6 +122,13 @@ class WineRecommendationsRepository:
             logging.info('El modelo no devolvió IDs de vino.')
             return []
 
+        # Transform dot products to compatibility scores [0, 100]
+        compatibility_scores = {}
+        for wine_id, dot_product in dot_products_data.items():
+            score = self._transform_dot_product_to_score(dot_product)
+            compatibility_scores[wine_id] = score
+            logging.debug(f'Wine {wine_id}: dot_product={dot_product:.4f} -> score={score:.2f}')
+
         # Step 5: Apply filters and build response
         filtered_wines = []
         tried_ids = set()
@@ -112,13 +136,13 @@ class WineRecommendationsRepository:
         for wine_id_str in wine_ids:
             if wine_id_str in tried_ids or len(filtered_wines) >= limit:
                 continue
-            
+
             tried_ids.add(wine_id_str)
-            
+
             try:
                 wine = wines_repo.get_by_id(int(wine_id_str))
                 if wine:
-                    wine.add_score(scores_data.get(wine_id_str, 0))
+                    wine.add_score(compatibility_scores.get(wine_id_str, 0))
                     
                     # Apply optional filters
                     matches = True
@@ -142,3 +166,112 @@ class WineRecommendationsRepository:
 
         logging.info(f'Retorna {len(filtered_wines)} vinos tras aplicar filtros y límite')
         return filtered_wines[:limit]
+
+    def get_wine_scores(
+        self,
+        user: 'User',
+        wine_ids: list[int]
+    ) -> dict[str, float]:
+        """
+        Get compatibility scores for specific wines for a user.
+
+        Args:
+            user: User object with preferences and ratings
+            wine_ids: List of wine IDs to score
+
+        Returns:
+            Dict mapping wine_id (as string) to dot product score
+        """
+        if not user.onboarding_completed:
+            logging.warning(f'User {user.uid_to_str()} has not completed onboarding')
+            return {}
+
+        if not wine_ids:
+            logging.warning('No wine IDs provided for scoring')
+            return {}
+
+        # Step 1: Gather user's rating history data
+        logging.info(f'Gathering rating data for user {user.uid_to_str()} to score {len(wine_ids)} wines')
+
+        user_ratings = user.get_ratings()
+
+        # Build rating data with wine attributes
+        ratings_data = []
+        for rating in user_ratings:
+            try:
+                ratings_data.append({
+                    'wine_id': rating.wine_id,
+                    'rating': rating.rating,
+                    'wine_type': rating.wine.type if hasattr(rating.wine, 'type') else None,
+                    'body': rating.wine.body if hasattr(rating.wine, 'body') else None,
+                    'abv': rating.wine.abv if hasattr(rating.wine, 'abv') else None,
+                    'country': rating.wine.country if hasattr(rating.wine, 'country') else None,
+                    'grape': rating.wine.elaborate if hasattr(rating.wine, 'elaborate') else None,
+                    'acidity': rating.wine.acidity if hasattr(rating.wine, 'acidity') else None,
+                    'complexity': 0,
+                    'is_reserve': False,
+                    'is_grand': False,
+                    'created_at': None,
+                })
+            except Exception as e:
+                logging.warning(f'Could not process rating: {e}')
+                continue
+
+        # Step 2: Calculate user features
+        logging.info(f'Calculating features for user {user.uid_to_str()} with {len(ratings_data)} ratings')
+        user_features = self.features_service.calculate_features(
+            user_id=user.uid_to_str(),
+            ratings_data=ratings_data,
+            preferences_data=user.preferences if hasattr(user, 'preferences') else None
+        )
+
+        # Step 3: Call the /wines/score endpoint
+        logging.info(f'Calling /wines/score endpoint with {len(wine_ids)} wine IDs')
+
+        # Convert wine_ids to strings as expected by the API
+        wine_ids_str = [str(wine_id) for wine_id in wine_ids]
+
+        payload = {
+            'user_data': user_features,
+            'wine_ids': wine_ids_str,
+            'user_id': user.uid_to_str()
+        }
+        body_json = json.dumps(payload)
+
+        logging.info(f'Llamando a {self.model_api_url}/wines/score')
+
+        try:
+            response = requests.post(
+                f'{self.model_api_url}/wines/score',
+                body_json,
+                headers={'Content-Type': 'application/json'}
+            )
+
+            if response.status_code != self.OK_STATUS_CODE:
+                logging.error(
+                    f'Error al obtener scores de vinos. Status: {response.status_code}, Response: {response.text}')
+                return {}
+
+            # Parse response
+            parsed_response_json = response.json()
+            dot_products = parsed_response_json.get('dot_products', {})
+
+            # Transform dot products to compatibility scores [0, 100]
+            compatibility_scores = {}
+            for wine_id, dot_product in dot_products.items():
+                score = self._transform_dot_product_to_score(dot_product)
+                compatibility_scores[wine_id] = score
+                logging.debug(f'Wine {wine_id}: dot_product={dot_product:.4f} -> score={score:.2f}')
+
+            logging.info(f'Recibidos y transformados {len(compatibility_scores)} scores del modelo')
+            return compatibility_scores
+
+        except requests.exceptions.RequestException as e:
+            logging.error(f'Error de red al llamar a /wines/score: {e}')
+            return {}
+        except json.JSONDecodeError as e:
+            logging.error(f'Error al decodificar la respuesta JSON: {e}')
+            return {}
+        except Exception as e:
+            logging.error(f'Error inesperado al obtener scores: {e}')
+            return {}
