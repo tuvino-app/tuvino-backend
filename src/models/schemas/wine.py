@@ -58,9 +58,16 @@ class WineSchema(BaseSchemaModel):
     harmonize_es: str | None = None
 
     def add_score(self, score: float):
-        if score < 0.0 or score > 1.0:
-            raise ValueError("Score must be a probability")
-        self.score = round(score, 3)
+        """
+        Add predicted rating score to wine.
+        
+        Note: With the dot product model, scores are now predicted ratings in [1, 5] range,
+        not similarity scores in [0, 1] range. This matches the model's output transformation:
+        sigmoid(dot_product) * 4 + 1
+        """
+        if score < 1.0 or score > 5.0:
+            raise ValueError("Score must be a predicted rating between 1.0 and 5.0")
+        self.score = round(score, 2)  # 2 decimals sufficient for ratings
 
 class WineFavorites(BaseSchemaModel):
     id: int
