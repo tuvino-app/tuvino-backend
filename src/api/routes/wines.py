@@ -1,11 +1,12 @@
 import fastapi
 import logging
 import math
-from fastapi import status, HTTPException, Path, Query
+from fastapi import status, HTTPException, Path, Query, Depends
 from src.models.schemas.wine import WineSchema, WineFilters, PaginatedWineResponse
 from src.repository.wines_repository import WinesRepository
 from src.repository.wine_recommendations_repository import WineRecommendationsRepository
 from src.repository.users_repository import UsersRepository
+from src.api.dependencies import get_repository
 
 router = fastapi.APIRouter(prefix="/wines", tags=["wines"])
 repo = WinesRepository()
@@ -16,16 +17,19 @@ repo = WinesRepository()
     response_model=PaginatedWineResponse,
     status_code=status.HTTP_200_OK,
 )
-async def get_wine_by_name(wine_name: str = Query(None, description="Wine name"),
-                           wine_type: str = Query(None, description="Type of wine"),
-                           winery: str = Query(None, description="Name of winery"),
-                           country: str = Query(None, description="Region of origin"),
-                           region: str = Query(None, description="Region of origin"),
-                           min_abv: float = Query(None, description="Minimum ABV"),
-                           max_abv: float = Query(None, description="Maximum ABV"),
-                           page: int = Query(1, ge=1, description="Page number (starting from 1)"),
-                           page_size: int = Query(20, ge=1, le=100, description="Number of items per page"),
-                           user_id: str = Query(None, description="User ID for compatibility scoring (optional)")):
+async def get_wine_by_name(
+    wine_name: str = Query(None, description="Wine name"),
+    wine_type: str = Query(None, description="Type of wine"),
+    winery: str = Query(None, description="Name of winery"),
+    country: str = Query(None, description="Region of origin"),
+    region: str = Query(None, description="Region of origin"),
+    min_abv: float = Query(None, description="Minimum ABV"),
+    max_abv: float = Query(None, description="Maximum ABV"),
+    page: int = Query(1, ge=1, description="Page number (starting from 1)"),
+    page_size: int = Query(20, ge=1, le=100, description="Number of items per page"),
+    user_id: str = Query(None, description="User ID for compatibility scoring (optional)"),
+    users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository))
+):
     try:
         filters = WineFilters(
             wine_name=wine_name,
@@ -48,8 +52,7 @@ async def get_wine_by_name(wine_name: str = Query(None, description="Wine name")
             try:
                 logging.info(f"Enriching {len(wines)} wines with compatibility scores for user {user_id}")
 
-                # Get user
-                users_repo = UsersRepository()
+                # Get user (using injected repository)
                 user = users_repo.get_user_by_id(user_id)
 
                 # Get wine IDs from current page
