@@ -36,10 +36,11 @@ CACHE_EXPIRY_MINUTES = 30  # Cache recommendations for 30 minutes
 )
 async def get_wine_recommendations(
     user_id: str = Query(..., description="ID of the user to get recommendations for"),
-    limit: int = Query(3, description="Maximum number of recommendations to return", ge=1, le=20),
+    limit: int = Query(10, description="Maximum number of recommendations to return", ge=1, le=999),
     wine_type: str = Query(None, description="Type of wine to filter recommendations (e.g. tinto, blanco, rosado)"),
     body: str = Query(None, description="Body of wine to filter recommendations (e.g. ligero, medio, robusto)"),
     dryness: str = Query(None, description="Dryness of wine to filter recommendations (e.g. seco, semi-seco, dulce)"),
+    country: str = Query(None, description="Country of wine to filter recommendations"),
     abv: float = Query(None, description="Alcohol by volume to filter recommendations"),
     use_cache: bool = Query(True, description="Whether to use cached recommendations if available"),
     users_repo: UsersRepository = Depends(get_repository(repo_type=UsersRepository)),
@@ -47,7 +48,7 @@ async def get_wine_recommendations(
 ):
     try:
         # Create cache key based on user_id and filters
-        cache_key = f"{user_id}_{limit}_{wine_type}_{body}_{dryness}_{abv}"
+        cache_key = f"{user_id}_{limit}_{wine_type}_{body}_{dryness}_{country}_{abv}"
         
         # Check if we have cached recommendations
         if use_cache and cache_key in _recommendations_cache:
@@ -71,6 +72,7 @@ async def get_wine_recommendations(
             wine_type=wine_type,
             body=body,
             dryness=dryness,
+            country=country,
             abv=abv
         )
         

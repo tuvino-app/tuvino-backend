@@ -43,6 +43,7 @@ class WineRecommendationsRepository:
         wine_type: str = None,
         body: str = None,
         dryness: str = None,
+        country: str = None,
         abv: float = None
     ) -> list:
         if not user.onboarding_completed:
@@ -144,7 +145,6 @@ class WineRecommendationsRepository:
                 if wine:
                     wine.add_score(compatibility_scores.get(wine_id_str, 0))
                     
-                    # Apply optional filters
                     matches = True
                     if wine_type and (not hasattr(wine, "type") or wine.type.lower() != wine_type.lower()):
                         matches = False
@@ -153,6 +153,8 @@ class WineRecommendationsRepository:
                     if dryness and (not hasattr(wine, "dryness") or wine.dryness.lower() != dryness.lower()):
                         matches = False
                     if abv and (not hasattr(wine, "abv") or float(wine.abv) != float(abv)):
+                        matches = False
+                    if country and (not hasattr(wine, "country") or wine.country.lower() != country.lower()):
                         matches = False
 
                     if matches:
