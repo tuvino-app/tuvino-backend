@@ -16,7 +16,17 @@ class WineRecommendationsRepository:
         """
         Transform raw dot product from Cloud Run to compatibility score [0, 100].
 
-        Formula: sigmoid(dot_product) * 100
+        Formula: sigmoid(dot_product * 50) * 100
+
+        The amplification factor of 50 is applied because dot products for normalized
+        embeddings in high-dimensional space are typically very small (around -0.01 to 0.03).
+        Without amplification, all scores would cluster around 50%.
+
+        Examples with amplification:
+        - dot_product = 0.03 -> score ≈ 82%
+        - dot_product = 0.01 -> score ≈ 62%
+        - dot_product = 0.00 -> score = 50%
+        - dot_product = -0.01 -> score ≈ 38%
 
         Args:
             dot_product: Raw dot product value from the model
@@ -24,7 +34,9 @@ class WineRecommendationsRepository:
         Returns:
             Compatibility score in range [0, 100]
         """
-        sigmoid_value = 1 / (1 + math.exp(-dot_product))
+        # Amplify small dot products to spread out the score distribution
+        amplified_dot = dot_product * 50
+        sigmoid_value = 1 / (1 + math.exp(-amplified_dot))
         compatibility_score = sigmoid_value * 100
         return round(compatibility_score, 2)
     def __init__(self):
