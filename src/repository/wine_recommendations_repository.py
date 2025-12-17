@@ -91,12 +91,13 @@ class WineRecommendationsRepository:
         logging.info(f'Calling Two Tower Model with {len(user_features)} features')
         payload = {
             'user_id': user.uid_to_str(),  # Include user_id for future requirements
+            'limit': limit,  # Add limit parameter
             **user_features  # All 55 features
         }
         body_json = json.dumps(payload)
         
         logging.info(f'Payload enviado al modelo (primeros 5 features): {dict(list(payload.items())[:5])}...')
-        logging.info(f'Llamando a la API de recomendaciones en {self.model_api_url}/wines')
+        logging.info(f'Llamando a la API de recomendaciones en {self.model_api_url}/wines con limit={limit}')
 
         response = requests.post(
             f'{self.model_api_url}/wines', 
