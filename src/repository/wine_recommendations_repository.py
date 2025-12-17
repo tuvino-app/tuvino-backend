@@ -123,12 +123,19 @@ class WineRecommendationsRepository:
             logging.info('El modelo no devolvió IDs de vino.')
             return []
 
+        # Log dot product statistics
+        if dot_products_data:
+            dot_values = list(dot_products_data.values())
+            logging.info(f'Dot products received - min: {min(dot_values):.6f}, max: {max(dot_values):.6f}, mean: {sum(dot_values)/len(dot_values):.6f}')
+            logging.info(f'Sample dot products: {dict(list(dot_products_data.items())[:5])}')
+
         # Transform dot products to compatibility scores [0, 100]
         compatibility_scores = {}
         for wine_id, dot_product in dot_products_data.items():
             score = self._transform_dot_product_to_score(dot_product)
             compatibility_scores[wine_id] = score
-            logging.debug(f'Wine {wine_id}: dot_product={dot_product:.4f} -> score={score:.2f}')
+            if len(compatibility_scores) <= 5:  # Log first 5 transformations
+                logging.info(f'Wine {wine_id}: dot_product={dot_product:.6f} -> score={score:.2f}')
 
         # Step 5: Apply filters and build response
         filtered_wines = []
@@ -258,12 +265,19 @@ class WineRecommendationsRepository:
             parsed_response_json = response.json()
             dot_products = parsed_response_json.get('dot_products', {})
 
+            # Log dot product statistics
+            if dot_products:
+                dot_values = list(dot_products.values())
+                logging.info(f'Dot products received for scoring - min: {min(dot_values):.6f}, max: {max(dot_values):.6f}, mean: {sum(dot_values)/len(dot_values):.6f}')
+                logging.info(f'Sample dot products: {dict(list(dot_products.items())[:5])}')
+
             # Transform dot products to compatibility scores [0, 100]
             compatibility_scores = {}
             for wine_id, dot_product in dot_products.items():
                 score = self._transform_dot_product_to_score(dot_product)
                 compatibility_scores[wine_id] = score
-                logging.debug(f'Wine {wine_id}: dot_product={dot_product:.4f} -> score={score:.2f}')
+                if len(compatibility_scores) <= 5:  # Log first 5 transformations
+                    logging.info(f'Wine {wine_id}: dot_product={dot_product:.6f} -> score={score:.2f}')
 
             logging.info(f'Recibidos y transformados {len(compatibility_scores)} scores del modelo')
             return compatibility_scores
