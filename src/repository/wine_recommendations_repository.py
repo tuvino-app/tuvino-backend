@@ -16,17 +16,7 @@ class WineRecommendationsRepository:
         """
         Transform raw dot product from Cloud Run to compatibility score [0, 100].
 
-        Formula: sigmoid(dot_product * 50) * 100
-
-        The amplification factor of 50 is applied because dot products for normalized
-        embeddings in high-dimensional space are typically very small (around -0.01 to 0.03).
-        Without amplification, all scores would cluster around 50%.
-
-        Examples with amplification:
-        - dot_product = 0.03 -> score ≈ 82%
-        - dot_product = 0.01 -> score ≈ 62%
-        - dot_product = 0.00 -> score = 50%
-        - dot_product = -0.01 -> score ≈ 38%
+        Formula: sigmoid(dot_product) * 100
 
         Args:
             dot_product: Raw dot product value from the model
@@ -34,9 +24,7 @@ class WineRecommendationsRepository:
         Returns:
             Compatibility score in range [0, 100]
         """
-        # Amplify small dot products to spread out the score distribution
-        amplified_dot = dot_product * 50
-        sigmoid_value = 1 / (1 + math.exp(-amplified_dot))
+        sigmoid_value = 1 / (1 + math.exp(-dot_product))
         compatibility_score = sigmoid_value * 100
         return round(compatibility_score, 2)
     def __init__(self):
@@ -103,7 +91,6 @@ class WineRecommendationsRepository:
         logging.info(f'Calling Two Tower Model with {len(user_features)} features')
         payload = {
             'user_id': user.uid_to_str(),  # Include user_id for future requirements
-            'limit': limit,  # Add limit parameter
             **user_features  # All 55 features
         }
         body_json = json.dumps(payload)
@@ -112,7 +99,7 @@ class WineRecommendationsRepository:
         logging.info(f'Llamando a la API de recomendaciones en {self.model_api_url}/wines con limit={limit}')
 
         response = requests.post(
-            f'{self.model_api_url}/wines', 
+            f'{self.model_api_url}/wines?limit={limit}', 
             body_json, 
             headers={'Content-Type': 'application/json'}
         )
